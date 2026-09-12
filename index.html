@@ -210,6 +210,17 @@ main{padding-bottom:40px}
 .load-step.active .load-dot:after{content:"";width:6px;height:6px;background:var(--blue);border-radius:50%}
 .load-step.done .load-dot{border-color:var(--ok);color:var(--ok);font-size:9px}
 .load-step.done .load-dot:after{content:"✓"}
+.refresh-dialog{position:fixed;inset:0;z-index:220;display:grid;place-items:center;padding:18px;background:color-mix(in srgb,var(--bg) 72%,transparent);backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .25s ease}
+.refresh-dialog.show{opacity:1;pointer-events:auto}
+.refresh-card{width:min(420px,100%);border:1px solid color-mix(in srgb,var(--warn) 45%,var(--border));border-radius:16px;background:var(--surface);box-shadow:0 24px 70px rgba(0,0,0,.32);padding:22px;transform:translateY(12px) scale(.97);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.refresh-dialog.show .refresh-card{transform:none}
+.refresh-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,var(--surface2));border:1px solid color-mix(in srgb,var(--warn) 28%,var(--border));animation:refreshPulse 2.2s ease-in-out infinite}
+.refresh-icon svg{width:21px;height:21px}
+@keyframes refreshPulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--warn) 20%,transparent)}50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--warn) 0%,transparent)}}
+.refresh-card h2{margin:16px 0 6px;font-family:var(--display);font-size:18px}
+.refresh-card p{margin:0;color:var(--text2);font-size:12px;line-height:1.6}
+.refresh-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+@media(max-width:540px){.refresh-actions{flex-direction:column-reverse}.refresh-actions .btn{width:100%}}
 
 /* ---------- Dashboard ---------- */
 .dashboard{display:none}
@@ -272,7 +283,7 @@ main{padding-bottom:40px}
 .alert-dot.bad{background:var(--bad)}
 
 /* ---------- Tabs ---------- */
-.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:0}
+.tabs{position:relative;z-index:1;display:flex;gap:7px;flex-wrap:wrap;margin-bottom:0;padding-top:4px}
 .tab{
   display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border);background:var(--surface2);
   color:var(--text2);padding:9px 13px;border-radius:999px;font-size:11.5px;font-weight:850;transition:var(--transition)
@@ -539,6 +550,10 @@ footer{border-top:1px solid var(--border2);padding:20px 0 27px;margin-top:25px}
         </svg>
       </button>
 
+      <button class="btn btn-secondary" id="refreshBtn" type="button" title="Refresh dashboard" aria-label="Refresh dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 11a8 8 0 0 0-14.9-4L3 10"></path><path d="M3 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.9 4L21 14"></path><path d="M21 19v-5h-5"></path></svg>
+      </button>
+
       <button class="btn" id="pdfBtn" type="button" disabled title="Download the current dashboard view as PDF">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
           <path d="M12 3v11"></path><path d="m8 10 4 4 4-4"></path><path d="M5 21h14"></path>
@@ -646,7 +661,7 @@ footer{border-top:1px solid var(--border2);padding:20px 0 27px;margin-top:25px}
       </section>
 
       <!-- CATEGORY NAV -->
-      <section class="section" style="padding-top:0">
+      <section class="section" style="padding-top:12px">
         <div class="tabs" id="tabs" role="tablist" aria-label="Inventory category">
           <button class="tab active" data-tab="NIC" role="tab" aria-selected="true"><span class="tab-dot"></span>NIC</button>
           <button class="tab" data-tab="DCU" role="tab" aria-selected="false"><span class="tab-dot"></span>DCU</button>
@@ -689,6 +704,18 @@ footer{border-top:1px solid var(--border2);padding:20px 0 27px;margin-top:25px}
       <div class="load-step" data-step="calc"><span class="load-dot"></span>Calculating stock position</div>
       <div class="load-step" data-step="render"><span class="load-dot"></span>Preparing management dashboard</div>
       <div class="load-step" data-step="ready"><span class="load-dot"></span>Dashboard ready</div>
+    </div>
+  </div>
+</div>
+
+<div class="refresh-dialog" id="refreshDialog" role="dialog" aria-modal="true" aria-labelledby="refreshDialogTitle" aria-describedby="refreshDialogText">
+  <div class="refresh-card">
+    <div class="refresh-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 11a8 8 0 0 0-14.9-4L3 10"></path><path d="M3 5v5h5"></path><path d="M4 13a8 8 0 0 0 14.9 4L21 14"></path><path d="M21 19v-5h-5"></path></svg></div>
+    <h2 id="refreshDialogTitle">Refresh this dashboard?</h2>
+    <p id="refreshDialogText">Your workbook is held in this browser tab only. Refreshing will clear the current view and you will need to upload the Excel file again.</p>
+    <div class="refresh-actions">
+      <button class="btn" id="cancelRefreshBtn" type="button">Stay here</button>
+      <button class="btn btn-primary" id="confirmRefreshBtn" type="button">Refresh page</button>
     </div>
   </div>
 </div>
@@ -1061,6 +1088,16 @@ function validateFile(file){
   return null;
 }
 
+function refreshWarning(event){
+  event.preventDefault();
+  event.returnValue=true;
+}
+
+function setRefreshGuard(enabled){
+  window.removeEventListener("beforeunload",refreshWarning);
+  if(enabled) window.addEventListener("beforeunload",refreshWarning);
+}
+
 async function handleFile(file){
   const err=validateFile(file);
   if(err){ toast("Upload failed",err,"error",6000); return; }
@@ -1099,6 +1136,7 @@ async function handleFile(file){
     state.loadedAt=new Date();
     state.rows=parsed.rows;
     state.warnings=parsed.warnings;
+    setRefreshGuard(true);
     state.tab="NIC";
     state.filters={ NIC:{stock:"all",status:"all",search:""}, DCU:{stock:"all",status:"all",search:""}, SEAL:{stock:"all",status:"all",search:""} };
     state.sort={ NIC:{key:"remaining",dir:"desc"}, DCU:{key:"remaining",dir:"desc"}, SEAL:{key:"remaining",dir:"desc"} };
@@ -1112,11 +1150,11 @@ async function handleFile(file){
     enterDashboard();
 
     const warningText=state.warnings.length
-      ? `${state.rows.length} stock lots loaded. ${state.warnings.length} data-quality issue${state.warnings.length===1?"":"s"} found.`
-      : `${state.rows.length} stock lots loaded successfully. NIC, DCU and SEAL are shown separately.`;
+      ? `${state.rows.length} installation lots loaded. ${state.warnings.length} data review item${state.warnings.length===1?"":"s"} found.`
+      : `${state.rows.length} installation lots are ready. Refreshing this tab will clear the local session.`;
 
     toast(
-      state.warnings.length ? "Workbook loaded with warnings" : "Workbook loaded successfully",
+      state.warnings.length ? "Workbook ready with review items" : "Workbook ready",
       warningText,
       state.warnings.length ? "warning" : "success",
       6700
@@ -1148,6 +1186,7 @@ function enterDashboard(){
 function showEmptyState(){
   state.rows=[];
   state.warnings=[];
+  setRefreshGuard(false);
   clearTimeout(state.filebarTimer);
   $(".filebar").classList.remove("is-settled");
   Object.keys(state.charts).forEach(destroyChart);
@@ -1155,6 +1194,24 @@ function showEmptyState(){
   $("#emptyState").classList.remove("hidden");
   $("#headerFileChip").style.display="none";
   $("#pdfBtn").disabled=true;
+}
+
+function openRefreshDialog(){
+  if(!state.rows.length){
+    window.location.reload();
+    return;
+  }
+  $("#refreshDialog").classList.add("show");
+  $("#cancelRefreshBtn").focus();
+}
+
+function closeRefreshDialog(){
+  $("#refreshDialog").classList.remove("show");
+}
+
+function confirmRefresh(){
+  setRefreshGuard(false);
+  window.location.reload();
 }
 
 /* ==========================================================
@@ -2160,6 +2217,23 @@ $("#clearBtn").addEventListener("click",()=>{
   toast("Dashboard cleared","Upload the latest workbook to start a new view.","success",3500);
 });
 $("#pdfBtn").addEventListener("click",()=>downloadPdf(state.tab));
+$("#refreshBtn").addEventListener("click",openRefreshDialog);
+$("#cancelRefreshBtn").addEventListener("click",closeRefreshDialog);
+$("#confirmRefreshBtn").addEventListener("click",confirmRefresh);
+$("#refreshDialog").addEventListener("click",e=>{
+  if(e.target.id==="refreshDialog") closeRefreshDialog();
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape" && $("#refreshDialog").classList.contains("show")){
+    e.preventDefault();
+    closeRefreshDialog();
+    return;
+  }
+  if(state.rows.length && (e.key==="F5" || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==="r"))){
+    e.preventDefault();
+    openRefreshDialog();
+  }
+});
 
 /* Supplied Yitran logos: white mark for dark theme, blue mark for light theme. */
 setTheme();
