@@ -226,17 +226,15 @@ main{padding-bottom:40px}
 .onboarding-backdrop{position:absolute;inset:0;background:rgba(3,10,19,.66);backdrop-filter:blur(3px);animation:onboardingFade .3s ease}
 .onboarding-target{position:relative;z-index:242!important;box-shadow:0 0 0 5px color-mix(in srgb,var(--blue) 70%,transparent),0 0 0 9999px rgba(3,10,19,.66)!important;transition:box-shadow .3s ease}
 .onboarding-card{position:fixed;z-index:243;width:min(330px,calc(100vw - 28px));padding:18px;border:1px solid color-mix(in srgb,var(--blue) 46%,var(--border));border-radius:14px;background:var(--surface);box-shadow:0 22px 60px rgba(0,0,0,.38);animation:onboardingCardIn .38s cubic-bezier(.2,.8,.2,1)}
-.onboarding-card:before{content:"";position:absolute;left:28px;top:-8px;width:15px;height:15px;background:var(--surface);border-left:1px solid color-mix(in srgb,var(--blue) 46%,var(--border));border-top:1px solid color-mix(in srgb,var(--blue) 46%,var(--border));transform:rotate(45deg)}
+.onboarding-card:before{content:"";position:absolute;left:var(--pointer-left,28px);top:-7px;width:13px;height:13px;background:var(--surface);border-left:1px solid color-mix(in srgb,var(--blue) 46%,var(--border));border-top:1px solid color-mix(in srgb,var(--blue) 46%,var(--border));transform:rotate(45deg)}
 .onboarding-card.top:before{top:auto;bottom:-8px;border-left:0;border-top:0;border-right:1px solid color-mix(in srgb,var(--blue) 46%,var(--border));border-bottom:1px solid color-mix(in srgb,var(--blue) 46%,var(--border))}
 .onboarding-kicker{color:var(--blue);font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
 .onboarding-card h2{margin:6px 0 5px;font-family:var(--display);font-size:17px}
 .onboarding-card p{margin:0;color:var(--text2);font-size:11.5px;line-height:1.55}
 .onboarding-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px}
 .onboarding-dots{display:flex;gap:5px}.onboarding-dot{width:6px;height:6px;border-radius:50%;background:var(--border)}.onboarding-dot.active{width:18px;border-radius:99px;background:var(--blue)}
-.onboarding-arrow{position:absolute;right:20px;bottom:18px;width:22px;height:22px;border-right:2px solid var(--blue);border-bottom:2px solid var(--blue);transform:rotate(45deg);animation:onboardingArrow 1.2s ease-in-out infinite}
 @keyframes onboardingFade{from{opacity:0}to{opacity:1}}
 @keyframes onboardingCardIn{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:none}}
-@keyframes onboardingArrow{0%,100%{transform:rotate(45deg) translate(0,0);opacity:.55}50%{transform:rotate(45deg) translate(4px,4px);opacity:1}}
 @media(max-width:600px){.onboarding-card{width:min(310px,calc(100vw - 24px))}.onboarding-card h2{font-size:16px}}
 
 /* ---------- Dashboard ---------- */
@@ -747,7 +745,6 @@ footer{border-top:1px solid var(--border2);padding:20px 0 27px;margin-top:25px}
       <div class="onboarding-dots" aria-hidden="true"><span class="onboarding-dot active"></span><span class="onboarding-dot"></span><span class="onboarding-dot"></span></div>
       <div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" id="onboardingSkip" type="button">Skip</button><button class="btn btn-primary btn-sm" id="onboardingNext" type="button">Next</button></div>
     </div>
-    <span class="onboarding-arrow" aria-hidden="true"></span>
   </div>
 </div>
 
@@ -1262,8 +1259,10 @@ function positionOnboarding(){
   const showAbove=rect.bottom+gap+cardHeight>window.innerHeight;
   const top=showAbove ? Math.max(12,rect.top-cardHeight-gap) : Math.min(window.innerHeight-cardHeight-12,rect.bottom+gap);
   const left=Math.max(12,Math.min(window.innerWidth-card.offsetWidth-12,rect.left));
+  const pointerLeft=Math.max(18,Math.min(card.offsetWidth-30,rect.left+rect.width/2-left-7));
   card.style.top=`${top}px`;
   card.style.left=`${left}px`;
+  card.style.setProperty("--pointer-left",`${pointerLeft}px`);
   card.classList.toggle("top",showAbove);
 }
 
