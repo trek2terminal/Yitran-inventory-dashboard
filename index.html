@@ -222,8 +222,10 @@ main{padding-bottom:40px}
 .filebar{max-height:76px;padding:13px 0;border-bottom:1px solid var(--border2);overflow:hidden;transition:max-height .6s ease,padding .6s ease,border-color .6s ease,opacity .45s ease}
 .filebar-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .file-meta{display:flex;gap:16px;align-items:center;flex-wrap:wrap;max-height:40px;opacity:1;transform:none;overflow:hidden;transition:max-height .55s ease,opacity .4s ease,transform .55s ease}
-.filebar.is-settled{max-height:0;padding:0;border-color:transparent;opacity:0}
+.filebar.is-settled{max-height:8px;padding:0;border-color:transparent;opacity:.35;cursor:default}
 .filebar.is-settled .file-meta{max-height:0;opacity:0;transform:translateY(-8px);pointer-events:none}
+.filebar.is-settled:hover,.filebar.is-settled:focus-within{max-height:76px;padding:13px 0;border-color:var(--border2);opacity:1}
+.filebar.is-settled:hover .file-meta,.filebar.is-settled:focus-within .file-meta{max-height:40px;opacity:1;transform:none;pointer-events:auto;transition-delay:.08s}
 .filebar:hover,.filebar:focus-within{padding:13px 0;border-color:var(--border2)}
 .filebar:hover .file-meta,.filebar:focus-within .file-meta{max-height:40px;opacity:1;transform:none;pointer-events:auto}
 .meta-item{display:flex;align-items:center;gap:6px;color:var(--text2);font-size:11px}
@@ -483,7 +485,7 @@ footer{border-top:1px solid var(--border2);padding:20px 0 27px;margin-top:25px}
   .top-actions{gap:6px}
   .top-actions .btn{min-height:36px}
   .file-meta{gap:9px}
-  .filebar.is-settled{max-height:0;padding:0}
+  .filebar.is-settled{max-height:8px;padding:0}
   .section{padding:16px 0}
   .section-head{align-items:flex-start}
   .section-head h2{font-size:14px}
