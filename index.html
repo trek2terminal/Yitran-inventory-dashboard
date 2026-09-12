@@ -440,15 +440,6 @@ td.num-col{text-align:right;font-variant-numeric:tabular-nums}
 .q-sub{font-size:10px;color:var(--text2);margin-top:3px}
 .q-good{border-color:rgba(55,207,136,.25)}.q-warn{border-color:rgba(239,188,96,.28)}.q-bad{border-color:rgba(239,109,123,.28)}
 
-/* ---------- Footer ---------- */
-footer{border-top:1px solid var(--border2);padding:20px 0 27px;margin-top:25px}
-.footer-inner{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
-.footer-left{font-size:11px;font-weight:700;letter-spacing:.01em;color:var(--text2)}
-.footer-left a{color:var(--blue);font-weight:850;text-decoration:none;transition:color var(--transition)}
-.footer-left a:hover{color:var(--text);text-decoration:underline}
-.footer-left a:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:2px}
-.footer-sub{font-size:10px;color:var(--muted);margin-top:2px}.footer-credit{font-size:10px;color:var(--muted);margin-top:3px}.footer-right{font-size:10px;color:var(--muted)}
-
 /* ---------- Toast ---------- */
 .toast{
   position:fixed;right:20px;bottom:20px;z-index:180;width:min(390px,calc(100vw - 40px));
@@ -495,7 +486,6 @@ footer{border-top:1px solid var(--border2);padding:20px 0 27px;margin-top:25px}
   .filters{grid-template-columns:1fr}
   .filters .search-field,.reset-wrap{grid-column:auto}
   .cat-actions{width:100%}.cat-actions .btn{flex:1}
-  .footer-inner{flex-direction:column}
 }
 
 @media(min-width:1500px){
@@ -690,13 +680,6 @@ footer{border-top:1px solid var(--border2);padding:20px 0 27px;margin-top:25px}
     </div>
   </div>
 </main>
-
-<footer>
-  <div class="wrap footer-inner">
-    <div class="footer-left">&copy; Yitran Inventory Dashboard <span aria-hidden="true">·</span> built by <a href="https://trek2terminal.github.io" target="_blank" rel="noopener noreferrer">Subradeep</a></div>
-    <div class="footer-right">Runs locally, nothing leaves your browser.</div>
-  </div>
-</footer>
 
 <!-- SUCCESS / WARNING TOAST -->
 <div class="toast" id="toast" role="status" aria-live="polite">
