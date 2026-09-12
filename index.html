@@ -1,0 +1,1498 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Yitran Inventory Management</title>
+<meta name="description" content="Yitran inventory dashboard for NIC, DCU and SEAL stock — received, utilized and remaining, tracked separately by material." />
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+
+<style>
+:root{
+  --bg:#081019;
+  --surface:#0C1622;
+  --surface-2:#101C2B;
+  --elevated:#152C42;
+  --border:#22384F;
+  --border-soft:#1A2C3F;
+
+  --ink:#EEF3F8;
+  --ink-2:#96A9BE;
+  --ink-3:#647589;
+
+  --nic:#4F9FE8;
+  --nic-soft:rgba(79,159,232,0.12);
+  --dcu:#37C9BA;
+  --dcu-soft:rgba(55,201,186,0.12);
+  --seal:#B592E8;
+  --seal-soft:rgba(181,146,232,0.12);
+
+  --ok:#33C685;
+  --ok-soft:rgba(51,198,133,0.12);
+  --warn:#E8B155;
+  --warn-soft:rgba(232,177,85,0.12);
+  --bad:#EC6B78;
+  --bad-soft:rgba(236,107,120,0.12);
+  --idle:#5E7188;
+  --idle-soft:rgba(94,113,136,0.14);
+
+  --radius-s:6px;
+  --radius-m:11px;
+  --shadow:0 10px 30px rgba(2,6,12,0.4);
+
+  --font: "Inter", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
+}
+
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font);
+  font-size:14px;
+  line-height:1.5;
+  min-height:100vh;
+}
+body::before{
+  content:"";
+  position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(900px 460px at 88% -8%, rgba(79,159,232,0.10), transparent 60%),
+    radial-gradient(700px 420px at 4% 6%, rgba(181,146,232,0.06), transparent 60%);
+}
+button{ font-family:inherit; }
+::selection{ background:rgba(79,159,232,0.35); }
+a{ color:var(--nic); }
+.num{ font-variant-numeric:tabular-nums; font-feature-settings:"tnum"; }
+svg{ display:block; }
+.hidden{ display:none !important; }
+
+.visually-hidden{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+}
+
+/* ============ shell ============ */
+.shell{ position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column; }
+.wrap{ width:100%; max-width:1480px; margin:0 auto; padding:0 26px; }
+
+/* ============ header ============ */
+header.topbar{
+  position:sticky; top:0; z-index:50;
+  background:rgba(8,16,25,0.88);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border-soft);
+}
+.topbar-inner{ display:flex; align-items:center; justify-content:space-between; gap:18px; padding:14px 0; }
+.brand{ display:flex; align-items:center; gap:13px; min-width:0; }
+.brand img{ height:34px; width:auto; display:block; }
+.brand .brand-mark{
+  height:34px; width:34px; border-radius:9px; flex-shrink:0;
+  background:linear-gradient(135deg, var(--nic), var(--seal));
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:12px; color:#081019;
+}
+.brand-text h1{ margin:0; font-size:15px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.brand-text p{ margin:1px 0 0; font-size:11.5px; color:var(--ink-2); white-space:nowrap; }
+
+.topbar-actions{ display:flex; align-items:center; gap:9px; flex-shrink:0; }
+
+.btn{
+  display:inline-flex; align-items:center; gap:7px;
+  padding:8px 13px; border-radius:var(--radius-s);
+  border:1px solid var(--border); background:var(--surface-2);
+  color:var(--ink); font-size:12.5px; font-weight:600; cursor:pointer;
+  transition:background .15s ease, border-color .15s ease;
+  white-space:nowrap;
+}
+.btn:hover{ background:var(--elevated); border-color:#2c4460; }
+.btn:focus-visible{ outline:2px solid var(--nic); outline-offset:2px; }
+.btn svg{ width:14px; height:14px; flex-shrink:0; }
+.btn-primary{ background:var(--nic); border-color:var(--nic); color:#071019; }
+.btn-primary:hover{ background:#6bb0ee; }
+.btn-ghost{ background:transparent; }
+.btn-danger{ border-color:rgba(236,107,120,0.4); color:var(--bad); background:rgba(236,107,120,0.06); }
+.btn-danger:hover{ background:rgba(236,107,120,0.13); }
+.btn-sm{ padding:6px 10px; font-size:11.5px; }
+.btn[disabled]{ opacity:.4; cursor:not-allowed; }
+
+.file-chip{
+  display:none; align-items:center; gap:9px;
+  background:var(--surface-2); border:1px solid var(--border);
+  border-radius:var(--radius-s); padding:7px 12px; font-size:11.5px; color:var(--ink-2);
+}
+.file-chip strong{ color:var(--ink); font-weight:600; }
+.file-chip .dot{ width:6px; height:6px; border-radius:50%; background:var(--ok); flex-shrink:0; }
+
+main{ flex:1; }
+footer.sitefoot{ border-top:1px solid var(--border-soft); padding:18px 0 26px; }
+footer.sitefoot p{ margin:0; font-size:11.5px; color:var(--ink-3); text-align:center; }
+
+/* ============ empty / upload state ============ */
+.empty-hero{ padding:58px 0 40px; }
+.empty-card{
+  max-width:720px; margin:0 auto;
+  background:linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
+  border:1px solid var(--border); border-radius:var(--radius-m);
+  box-shadow:var(--shadow); padding:38px 38px 30px; text-align:center;
+}
+.empty-icon{
+  width:52px; height:52px; margin:0 auto 16px; border-radius:13px;
+  background:var(--nic-soft); border:1px solid rgba(79,159,232,0.28);
+  display:flex; align-items:center; justify-content:center;
+}
+.empty-icon svg{ width:24px; height:24px; color:var(--nic); }
+.empty-card h2{ margin:0 0 8px; font-size:21px; font-weight:700; }
+.empty-card > p{ margin:0 auto 26px; max-width:460px; color:var(--ink-2); font-size:13.5px; }
+
+.dropzone{
+  border:1.5px dashed var(--border); border-radius:var(--radius-m);
+  padding:32px 18px; cursor:pointer;
+  transition:border-color .15s ease, background .15s ease;
+  background:rgba(255,255,255,0.012);
+}
+.dropzone:hover, .dropzone:focus-visible{ border-color:var(--nic); background:rgba(79,159,232,0.045); }
+.dropzone.dragover{ border-color:var(--nic); background:rgba(79,159,232,0.09); }
+.dropzone svg{ width:26px; height:26px; margin:0 auto 10px; color:var(--ink-3); }
+.dropzone p{ margin:0 0 13px; color:var(--ink-2); font-size:13px; }
+.dropzone .filetypes{ margin-top:13px; font-size:10.5px; color:var(--ink-3); letter-spacing:.4px; }
+
+.privacy-note{ display:flex; align-items:center; justify-content:center; gap:7px; margin-top:20px; font-size:11.5px; color:var(--ink-3); }
+.privacy-note svg{ width:13px; height:13px; flex-shrink:0; }
+
+.progress-panel{ display:none; max-width:460px; margin:20px auto 0; text-align:left; }
+.progress-step{ display:flex; align-items:center; gap:10px; padding:7px 0; font-size:12.5px; color:var(--ink-3); }
+.progress-step .step-dot{ width:15px; height:15px; border-radius:50%; border:1.5px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+.progress-step.active{ color:var(--ink); }
+.progress-step.active .step-dot{ border-color:var(--nic); }
+.progress-step.done{ color:var(--ink-2); }
+.progress-step.done .step-dot{ border-color:var(--ok); background:rgba(51,198,133,0.15); }
+.progress-step.done .step-dot svg{ width:9px; height:9px; color:var(--ok); }
+.progress-step.active .step-dot::after{ content:""; width:6px; height:6px; border-radius:50%; background:var(--nic); }
+
+.error-banner{
+  display:none; max-width:560px; margin:18px auto 0; text-align:left;
+  background:rgba(236,107,120,0.08); border:1px solid rgba(236,107,120,0.3);
+  border-radius:var(--radius-s); padding:13px 15px; gap:10px; align-items:flex-start;
+}
+.error-banner.show{ display:flex; }
+.error-banner svg{ width:16px; height:16px; color:var(--bad); flex-shrink:0; margin-top:1px; }
+.error-banner p{ margin:0; font-size:12.5px; color:#F5C3C9; }
+
+/* ============ file status bar ============ */
+.filestatus{ padding:16px 0; border-bottom:1px solid var(--border-soft); }
+.filestatus-row{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+.filestatus-left{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.filestatus-item{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-2); }
+.filestatus-item strong{ color:var(--ink); font-weight:600; }
+.filestatus-item svg{ width:14px; height:14px; color:var(--ink-3); }
+
+/* ============ tabs ============ */
+.tabbar{ display:flex; gap:6px; padding:16px 0 0; flex-wrap:wrap; }
+.tab{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:9px 16px; border-radius:999px; cursor:pointer; user-select:none;
+  border:1px solid var(--border); background:var(--surface-2); color:var(--ink-2);
+  font-size:12.5px; font-weight:600; transition:all .15s ease;
+}
+.tab .tab-dot{ width:7px; height:7px; border-radius:50%; }
+.tab[data-tab="overview"] .tab-dot{ background:var(--ink-3); }
+.tab[data-tab="NIC"] .tab-dot{ background:var(--nic); }
+.tab[data-tab="DCU"] .tab-dot{ background:var(--dcu); }
+.tab[data-tab="SEAL"] .tab-dot{ background:var(--seal); }
+.tab:hover{ color:var(--ink); border-color:#2c4460; }
+.tab.active{ color:var(--ink); background:var(--elevated); border-color:#2c4460; }
+.tab .tab-flag{
+  display:none; align-items:center; justify-content:center;
+  min-width:16px; height:16px; padding:0 4px; border-radius:999px;
+  background:var(--bad-soft); color:var(--bad); font-size:10px; font-weight:700;
+}
+.tab .tab-flag.show{ display:inline-flex; }
+
+.section{ padding:26px 0; }
+.section + .section{ border-top:1px solid var(--border-soft); }
+.section-head{ display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:15px; flex-wrap:wrap; }
+.section-head h2{ margin:0; font-size:14.5px; font-weight:700; }
+.section-head .hint{ font-size:11.5px; color:var(--ink-3); }
+
+/* ============ category accent ============ */
+.cat-panel[data-cat="NIC"]{ --accent:var(--nic); --accent-soft:var(--nic-soft); }
+.cat-panel[data-cat="DCU"]{ --accent:var(--dcu); --accent-soft:var(--dcu-soft); }
+.cat-panel[data-cat="SEAL"]{ --accent:var(--seal); --accent-soft:var(--seal-soft); }
+
+.cat-heading{ display:flex; align-items:center; gap:11px; margin-bottom:18px; }
+.cat-heading .swatch{ width:10px; height:10px; border-radius:3px; background:var(--accent); flex-shrink:0; }
+.cat-heading h2{ margin:0; font-size:18px; font-weight:700; }
+.cat-heading .cat-sub{ font-size:12px; color:var(--ink-2); margin-left:2px; }
+
+/* ============ KPI cards ============ */
+.kpi-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:20px; }
+.kpi-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);
+  padding:16px 17px; position:relative; overflow:hidden;
+}
+.kpi-card::before{
+  content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--accent, var(--nic));
+}
+.kpi-label{ font-size:11px; font-weight:600; color:var(--ink-2); letter-spacing:.3px; margin-bottom:9px; }
+.kpi-value{ font-size:25px; font-weight:700; line-height:1.1; }
+.kpi-sub{ font-size:11.5px; color:var(--ink-3); margin-top:6px; }
+
+/* ============ charts ============ */
+.chart-grid{ display:grid; grid-template-columns:1fr 1.6fr; gap:14px; margin-bottom:20px; }
+.chart-grid.secondary{ grid-template-columns:1fr; }
+.chart-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:16px 18px; }
+.chart-card h3{ margin:0 0 4px; font-size:12.5px; font-weight:700; }
+.chart-card .chart-note{ margin:0 0 12px; font-size:11px; color:var(--ink-3); }
+.chart-card .chart-box{ position:relative; height:220px; }
+.chart-card .chart-box.tall{ height:auto; min-height:120px; }
+.donut-center{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; }
+.donut-center .dc-pct{ font-size:22px; font-weight:700; }
+.donut-center .dc-label{ font-size:10px; color:var(--ink-3); margin-top:2px; }
+
+/* ============ alerts + insights ============ */
+.split-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+.panel-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:16px 18px; }
+.panel-card h3{ margin:0 0 12px; font-size:12.5px; font-weight:700; display:flex; align-items:center; gap:7px; }
+.panel-card h3 svg{ width:14px; height:14px; }
+.alert-list, .insight-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px; }
+.alert-item{
+  display:flex; align-items:flex-start; gap:10px; padding:10px 11px;
+  border-radius:var(--radius-s); background:var(--surface-2); border:1px solid var(--border-soft);
+}
+.alert-item .a-dot{ width:7px; height:7px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+.alert-item.sev-critical .a-dot{ background:var(--bad); }
+.alert-item.sev-low .a-dot{ background:var(--warn); }
+.alert-item .a-body{ min-width:0; }
+.alert-item .a-title{ font-size:12.5px; font-weight:600; color:var(--ink); }
+.alert-item .a-detail{ font-size:11.5px; color:var(--ink-2); margin-top:2px; }
+.insight-item{ display:flex; gap:9px; font-size:12.5px; color:var(--ink-2); line-height:1.5; }
+.insight-item::before{ content:"—"; color:var(--accent, var(--nic)); flex-shrink:0; }
+.empty-note{ font-size:12.5px; color:var(--ink-3); padding:6px 0; }
+.empty-note.ok{ color:var(--ok); }
+
+/* ============ filters ============ */
+.filter-bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+.filter-field{ display:flex; flex-direction:column; gap:4px; }
+.filter-field label{ font-size:10.5px; color:var(--ink-3); }
+.filter-field select, .filter-field input{
+  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-s);
+  color:var(--ink); padding:7px 10px; font-size:12.5px; min-width:140px;
+}
+.filter-field input[type="search"]{ min-width:200px; }
+.filter-field select:focus, .filter-field input:focus{ outline:2px solid var(--accent, var(--nic)); outline-offset:1px; }
+.filter-spacer{ flex:1; }
+.filter-reset{ align-self:flex-end; }
+
+/* ============ table ============ */
+.table-wrap{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); overflow:hidden; }
+.table-scroll{ overflow-x:auto; }
+table.data-table{ width:100%; border-collapse:collapse; min-width:680px; }
+table.data-table thead th{
+  text-align:left; font-size:10.5px; font-weight:700; color:var(--ink-3);
+  letter-spacing:.3px; padding:11px 14px; border-bottom:1px solid var(--border);
+  cursor:pointer; white-space:nowrap; user-select:none;
+}
+table.data-table thead th.num{ text-align:right; }
+table.data-table thead th .sort-arrow{ margin-left:4px; opacity:.5; font-size:9px; }
+table.data-table thead th.sorted{ color:var(--ink); }
+table.data-table thead th.sorted .sort-arrow{ opacity:1; color:var(--accent, var(--nic)); }
+table.data-table tbody td{ padding:11px 14px; border-bottom:1px solid var(--border-soft); font-size:12.5px; }
+table.data-table tbody td.num{ text-align:right; }
+table.data-table tbody tr:last-child td{ border-bottom:none; }
+table.data-table tbody tr:hover{ background:rgba(255,255,255,0.015); }
+.util-cell{ display:flex; align-items:center; gap:8px; justify-content:flex-end; }
+.util-bar{ width:64px; height:5px; border-radius:4px; background:var(--border); overflow:hidden; flex-shrink:0; }
+.util-bar-fill{ height:100%; background:var(--accent, var(--nic)); }
+.badge{ display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px; font-size:10.5px; font-weight:700; white-space:nowrap; }
+.badge::before{ content:""; width:6px; height:6px; border-radius:50%; }
+.badge.st-healthy{ background:var(--ok-soft); color:var(--ok); } .badge.st-healthy::before{ background:var(--ok); }
+.badge.st-moderate{ background:var(--nic-soft); color:var(--nic); } .badge.st-moderate::before{ background:var(--nic); }
+.badge.st-low{ background:var(--warn-soft); color:var(--warn); } .badge.st-low::before{ background:var(--warn); }
+.badge.st-critical{ background:var(--bad-soft); color:var(--bad); } .badge.st-critical::before{ background:var(--bad); }
+.badge.st-nostock{ background:var(--idle-soft); color:var(--ink-2); } .badge.st-nostock::before{ background:var(--ink-3); }
+.issue-flag{ display:inline-flex; align-items:center; margin-left:6px; color:var(--bad); cursor:help; }
+.issue-flag svg{ width:12px; height:12px; }
+
+.table-empty{ padding:34px 14px; text-align:center; color:var(--ink-3); font-size:12.5px; }
+
+.table-foot{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 14px; flex-wrap:wrap; border-top:1px solid var(--border); }
+.table-foot .foot-left{ display:flex; align-items:center; gap:10px; font-size:11.5px; color:var(--ink-3); }
+.pager{ display:flex; align-items:center; gap:8px; }
+.pager button{ background:var(--surface-2); border:1px solid var(--border); color:var(--ink); border-radius:var(--radius-s); padding:5px 9px; font-size:12px; cursor:pointer; }
+.pager button:disabled{ opacity:.35; cursor:not-allowed; }
+.pager span{ font-size:11.5px; color:var(--ink-2); }
+
+/* ============ overview blocks ============ */
+.overview-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
+.overview-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);
+  padding:19px 20px; cursor:pointer; transition:border-color .15s ease, transform .1s ease;
+  text-align:left; display:block; width:100%;
+}
+.overview-card:hover{ border-color:#2c4460; }
+.overview-card:focus-visible{ outline:2px solid var(--accent, var(--nic)); outline-offset:2px; }
+.overview-card[data-cat="NIC"]{ --accent:var(--nic); }
+.overview-card[data-cat="DCU"]{ --accent:var(--dcu); }
+.overview-card[data-cat="SEAL"]{ --accent:var(--seal); }
+.overview-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.overview-top .oc-name{ display:flex; align-items:center; gap:9px; font-size:14.5px; font-weight:700; }
+.overview-top .oc-name .swatch{ width:10px; height:10px; border-radius:3px; background:var(--accent); }
+.overview-top .oc-pct{ font-size:19px; font-weight:700; color:var(--accent); }
+.overview-mini{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
+.overview-mini div{ text-align:left; }
+.overview-mini .om-label{ font-size:10px; color:var(--ink-3); margin-bottom:3px; }
+.overview-mini .om-value{ font-size:15px; font-weight:700; }
+.overview-bar{ height:6px; border-radius:4px; background:var(--border); overflow:hidden; margin-bottom:12px; }
+.overview-bar-fill{ height:100%; background:var(--accent); }
+.overview-flag{ font-size:11.5px; color:var(--ink-2); display:flex; align-items:center; gap:6px; }
+.overview-flag .fdot{ width:6px; height:6px; border-radius:50%; background:var(--bad); flex-shrink:0; }
+.overview-flag.ok .fdot{ background:var(--ok); }
+
+/* ============ data quality ============ */
+.dq-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.dq-item{ display:flex; align-items:flex-start; gap:9px; font-size:12.5px; color:var(--ink-2); padding:10px 12px; border-radius:var(--radius-s); background:var(--surface-2); border:1px solid var(--border-soft); }
+.dq-item svg{ width:14px; height:14px; color:var(--warn); flex-shrink:0; margin-top:1px; }
+.dq-ok{ display:flex; align-items:center; gap:9px; font-size:13px; color:var(--ok); padding:12px 14px; border-radius:var(--radius-s); background:var(--ok-soft); border:1px solid rgba(51,198,133,0.25); }
+.dq-ok svg{ width:16px; height:16px; }
+
+/* ============ responsive ============ */
+@media (max-width: 1080px){
+  .kpi-grid{ grid-template-columns:repeat(2,1fr); }
+  .chart-grid{ grid-template-columns:1fr; }
+  .split-grid{ grid-template-columns:1fr; }
+  .overview-grid{ grid-template-columns:1fr; }
+}
+@media (max-width: 640px){
+  .wrap{ padding:0 16px; }
+  .kpi-grid{ grid-template-columns:1fr 1fr; gap:9px; }
+  .kpi-value{ font-size:20px; }
+  .topbar-actions .btn span.btn-label{ display:none; }
+  .overview-mini{ grid-template-columns:1fr; gap:6px; }
+  .filestatus-row{ gap:9px; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand">
+        <img src="yitran-logo.png" alt="Yitran" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        <div class="brand-mark" style="display:none;">YT</div>
+        <div class="brand-text">
+          <h1>Yitran Inventory Management</h1>
+          <p>NIC · DCU · SEAL stock position</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <div class="file-chip" id="headerFileChip">
+          <span class="dot"></span>
+          <span id="headerFileName">—</span>
+        </div>
+        <button class="btn" id="exportCsvBtn" type="button" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+          <span class="btn-label">Export CSV</span>
+        </button>
+        <button class="btn btn-danger hidden" id="clearFileBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          <span class="btn-label">Clear File</span>
+        </button>
+        <button class="btn btn-primary" id="uploadBtnHeader" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 0L7 9m5-5l5 5M5 20h14"/></svg>
+          <span class="btn-label" id="uploadBtnHeaderLabel">Upload Excel</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+
+      <!-- ============ EMPTY / UPLOAD STATE ============ -->
+      <section class="empty-hero" id="emptyState">
+        <div class="empty-card">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/></svg>
+          </div>
+          <h2>Upload the latest inventory Excel</h2>
+          <p>Load the Yitran Inventory Management workbook to see NIC, DCU and SEAL stock position — received, utilized and remaining, tracked separately for each material.</p>
+
+          <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload Excel file">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0L7 9m5-5l5 5M5 20h14"/></svg>
+            <p>Drag &amp; drop your Excel file here</p>
+            <button class="btn btn-primary" id="browseBtn" type="button">Browse Excel File</button>
+            <div class="filetypes">.XLSX or .XLS · Max 25 MB</div>
+          </div>
+          <input type="file" id="fileInput" accept=".xlsx,.xls" class="visually-hidden" />
+
+          <div class="privacy-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+            <span>Inventory data is processed locally in your browser and is never uploaded to a server.</span>
+          </div>
+
+          <div class="progress-panel" id="progressPanel">
+            <div class="progress-step" data-step="read"><span class="step-dot"></span> Reading workbook</div>
+            <div class="progress-step" data-step="validate"><span class="step-dot"></span> Validating NIC, DCU and SEAL sections</div>
+            <div class="progress-step" data-step="calc"><span class="step-dot"></span> Calculating stock position</div>
+            <div class="progress-step" data-step="prepare"><span class="step-dot"></span> Preparing dashboard</div>
+            <div class="progress-step" data-step="ready"><span class="step-dot"></span> Ready</div>
+          </div>
+
+          <div class="error-banner" id="errorBanner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+            <p id="errorMessage"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ DASHBOARD ============ -->
+      <div id="dashboard" class="hidden">
+
+        <section class="filestatus">
+          <div class="filestatus-row">
+            <div class="filestatus-left">
+              <div class="filestatus-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+                <span>File: <strong id="statFileName">—</strong></span>
+              </div>
+              <div class="filestatus-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+                <span>Loaded: <strong id="statLoadedAt">—</strong></span>
+              </div>
+              <div class="filestatus-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
+                <span><strong id="statRecords">—</strong> stock lots parsed</span>
+              </div>
+            </div>
+            <button class="btn btn-sm" id="changeFileBtn" type="button">Change File</button>
+          </div>
+        </section>
+
+        <nav class="tabbar" id="tabbar" role="tablist" aria-label="Inventory category">
+          <div class="tab active" data-tab="overview" role="tab" aria-selected="true"><span class="tab-dot"></span>Overview</div>
+          <div class="tab" data-tab="NIC" role="tab" aria-selected="false"><span class="tab-dot"></span>NIC<span class="tab-flag" id="flagNIC"></span></div>
+          <div class="tab" data-tab="DCU" role="tab" aria-selected="false"><span class="tab-dot"></span>DCU<span class="tab-flag" id="flagDCU"></span></div>
+          <div class="tab" data-tab="SEAL" role="tab" aria-selected="false"><span class="tab-dot"></span>SEAL<span class="tab-flag" id="flagSEAL"></span></div>
+        </nav>
+
+        <!-- ===== OVERVIEW PANEL ===== -->
+        <section class="section" id="panel-overview">
+          <div class="section-head">
+            <h2>Category position</h2>
+            <span class="hint">NIC, DCU and SEAL are separate materials — figures are never combined</span>
+          </div>
+          <div class="overview-grid" id="overviewGrid"></div>
+        </section>
+
+        <!-- ===== CATEGORY PANELS (template filled by JS for NIC / DCU / SEAL) ===== -->
+        <div id="categoryPanels"></div>
+
+        <!-- ===== DATA QUALITY ===== -->
+        <section class="section" id="panel-dataquality">
+          <div class="section-head">
+            <h2>Data quality</h2>
+            <span class="hint">Issues found while reading the workbook</span>
+          </div>
+          <div id="dataQualityBody"></div>
+        </section>
+
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="sitefoot">
+    <p>Yitran Technologies India Pvt. Ltd. — Inventory Management Dashboard. All processing happens locally in your browser.</p>
+  </footer>
+
+</div>
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const CONFIG = {
+  ACCEPTED_EXT: [".xlsx", ".xls"],
+  MAX_FILE_MB: 25,
+  SHEET_NAME: "Inventory Summary",
+  SECTIONS: [
+    { key: "NIC", col: 0 },
+    { key: "DCU", col: 5 },
+    { key: "SEAL", col: 10 }
+  ],
+  CATEGORIES: ["NIC", "DCU", "SEAL"],
+  CATEGORY_SUBTITLE: {
+    NIC: "Network Interface Card stock",
+    DCU: "Data Concentrator Unit stock",
+    SEAL: "Meter seal stock"
+  },
+  DEFAULT_PER_PAGE: 10
+};
+
+const ICONS = {
+  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>',
+  insight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a7 7 0 00-4 12.7c.4.3.6.8.6 1.3v.5h6.8V16c0-.5.2-1 .6-1.3A7 7 0 0012 2z"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
+  warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>'
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const STATE = {
+  rows: [],
+  warnings: [],
+  fileName: null,
+  loadedAt: null,
+  activeTab: "overview",
+  charts: {},
+  chartsBuilt: {},
+  cat: {
+    NIC:  freshCatState(),
+    DCU:  freshCatState(),
+    SEAL: freshCatState()
+  }
+};
+
+function freshCatState(){
+  return {
+    filters: { stock: "all", status: "all", search: "" },
+    sort: { key: "remaining", dir: "asc" },
+    page: 1,
+    perPage: CONFIG.DEFAULT_PER_PAGE
+  };
+}
+
+/* ============================================================
+   DOM HELPERS
+   ============================================================ */
+function $(sel, root){ return (root || document).querySelector(sel); }
+function $all(sel, root){ return Array.from((root || document).querySelectorAll(sel)); }
+function el(tag, attrs, html){
+  const n = document.createElement(tag);
+  if (attrs) Object.keys(attrs).forEach(k => { if (attrs[k] !== undefined && attrs[k] !== null) n.setAttribute(k, attrs[k]); });
+  if (html !== undefined) n.innerHTML = html;
+  return n;
+}
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+
+/* ============================================================
+   FORMATTERS
+   ============================================================ */
+function fmtInt(n){
+  if (n === null || n === undefined || Number.isNaN(n)) return "—";
+  return Math.round(n).toLocaleString("en-IN");
+}
+function fmtPct(n){
+  if (n === null || n === undefined || Number.isNaN(n)) return "N/A";
+  return n.toFixed(2) + "%";
+}
+function fmtDate(d){
+  if (!d) return "—";
+  return d.toLocaleString("en-IN", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
+}
+function statusClass(status){
+  return {
+    "Healthy":"st-healthy", "Moderate":"st-moderate", "Low":"st-low",
+    "Critical":"st-critical", "No Stock":"st-nostock"
+  }[status] || "st-nostock";
+}
+
+/* ============================================================
+   ERRORS
+   ============================================================ */
+function DashboardError(message){ this.message = message; this.name = "DashboardError"; }
+DashboardError.prototype = Object.create(Error.prototype);
+
+/* ============================================================
+   NUMERIC PARSING
+   ============================================================ */
+function parseNumericCell(raw){
+  if (raw === null || raw === undefined || String(raw).trim() === ""){
+    return { value: 0, invalid: false, empty: true };
+  }
+  if (typeof raw === "number"){
+    return Number.isFinite(raw) ? { value: raw, invalid: false } : { value: 0, invalid: true, raw: raw };
+  }
+  let s = String(raw).trim().replace(/,/g, "");
+  if (/^-?\d+(\.\d+)?$/.test(s)) return { value: parseFloat(s), invalid: false };
+  return { value: 0, invalid: true, raw: raw };
+}
+
+/* ============================================================
+   WORKBOOK PARSING
+   ============================================================ */
+function getCell(aoa, r, c){
+  return (aoa[r] && aoa[r][c] !== undefined && aoa[r][c] !== null) ? aoa[r][c] : null;
+}
+
+function findSectionStart(aoa, def){
+  for (let r = 0; r < aoa.length; r++){
+    const cell = getCell(aoa, r, def.col);
+    if (cell !== null && String(cell).trim().toUpperCase() === def.key){
+      const headerCell = getCell(aoa, r + 1, def.col);
+      if (headerCell !== null && String(headerCell).trim().toUpperCase() === "STOCK"){
+        return r;
+      }
+    }
+  }
+  return -1;
+}
+
+function computeStatus(row){
+  if (row.received === 0 && row.utilized === 0) return "No Stock";
+  if (row.remaining <= 0) return "Critical";
+  const rp = row.remainingPercentage;
+  if (rp > 50) return "Healthy";
+  if (rp > 20) return "Moderate";
+  if (rp > 0) return "Low";
+  return "Critical";
+}
+
+function parseWorkbook(workbook){
+  const sheetName = workbook.SheetNames.find(n => n.trim().toLowerCase() === CONFIG.SHEET_NAME.toLowerCase());
+  if (!sheetName){
+    throw new DashboardError(`This workbook does not contain a sheet named "${CONFIG.SHEET_NAME}". Please upload the standard Yitran inventory workbook.`);
+  }
+  const ws = workbook.Sheets[sheetName];
+  const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null });
+
+  const warnings = [];
+  const rows = [];
+  const seenCount = new Map();
+  let anySection = false;
+
+  CONFIG.SECTIONS.forEach(def => {
+    const titleRow = findSectionStart(aoa, def);
+    if (titleRow === -1){
+      warnings.push(`Could not locate the ${def.key} section in "${CONFIG.SHEET_NAME}". ${def.key} figures may be incomplete or missing.`);
+      return;
+    }
+    anySection = true;
+    let r = titleRow + 2;
+    let guard = 0;
+    while (r < aoa.length && guard < 5000){
+      guard++;
+      const stockRaw = getCell(aoa, r, def.col);
+      if (stockRaw === null || String(stockRaw).trim() === "") break;
+      const stockName = String(stockRaw).trim();
+      if (stockName.toLowerCase() === "add new stock here"){ r++; continue; }
+
+      const recvRaw = getCell(aoa, r, def.col + 1);
+      const utilRaw = getCell(aoa, r, def.col + 2);
+      const recv = parseNumericCell(recvRaw);
+      const util = parseNumericCell(utilRaw);
+
+      const issues = [];
+      if (recv.invalid) issues.push(`Received value "${recvRaw}" is not a valid number; treated as 0.`);
+      if (util.invalid) issues.push(`Utilized value "${utilRaw}" is not a valid number; treated as 0.`);
+
+      const received = recv.value;
+      const utilized = util.value;
+      const remaining = received - utilized;
+
+      if (utilized > received){
+        issues.push(`Utilized (${fmtInt(utilized)}) exceeds Received (${fmtInt(received)}) by ${fmtInt(utilized - received)} unit(s).`);
+      }
+      if (received === 0 && utilized > 0){
+        issues.push(`Utilized quantity recorded with zero Received.`);
+      }
+
+      const key = def.key + "::" + stockName.toLowerCase();
+      seenCount.set(key, (seenCount.get(key) || 0) + 1);
+
+      rows.push({ item: def.key, stock: stockName, received, utilized, remaining, issues, key });
+      r++;
+    }
+  });
+
+  if (!anySection){
+    throw new DashboardError(`No NIC, DCU or SEAL sections were found in "${CONFIG.SHEET_NAME}". Please check the workbook matches the standard layout.`);
+  }
+
+  const dupWarned = new Set();
+  rows.forEach(row => {
+    if (seenCount.get(row.key) > 1 && !dupWarned.has(row.key)){
+      dupWarned.add(row.key);
+      warnings.push(`Duplicate stock entry detected: "${row.stock}" appears ${seenCount.get(row.key)} times under ${row.item}.`);
+    }
+    row.dataIssue = row.issues.length > 0;
+    row.issues.forEach(issue => warnings.push(`${row.item} — "${row.stock}": ${issue}`));
+  });
+
+  rows.forEach(row => {
+    row.utilizationPercentage = row.received > 0 ? (row.utilized / row.received * 100) : (row.utilized > 0 ? null : 0);
+    row.remainingPercentage = row.received > 0 ? (row.remaining / row.received * 100) : 0;
+    row.status = computeStatus(row);
+  });
+
+  if (rows.length === 0){
+    throw new DashboardError("No stock rows were found under NIC, DCU or SEAL. Please check the workbook has been filled in.");
+  }
+
+  return { rows, warnings };
+}
+
+/* ============================================================
+   CATEGORY CALCULATIONS
+   ============================================================ */
+function categoryRows(cat){ return STATE.rows.filter(r => r.item === cat); }
+
+function categorySummary(cat){
+  const list = categoryRows(cat);
+  const totalReceived = list.reduce((s, r) => s + r.received, 0);
+  const totalUtilized = list.reduce((s, r) => s + r.utilized, 0);
+  const totalRemaining = totalReceived - totalUtilized;
+  const utilizationPercentage = totalReceived > 0 ? (totalUtilized / totalReceived * 100) : 0;
+  const remainingPercentage = totalReceived > 0 ? (totalRemaining / totalReceived * 100) : 0;
+  return { item: cat, totalReceived, totalUtilized, totalRemaining, utilizationPercentage, remainingPercentage, count: list.length };
+}
+
+function generateAlerts(cat){
+  const list = categoryRows(cat).filter(r => r.status === "Critical" || r.status === "Low" || r.dataIssue);
+  list.sort((a, b) => {
+    const sevA = (a.dataIssue || a.status === "Critical") ? 0 : 1;
+    const sevB = (b.dataIssue || b.status === "Critical") ? 0 : 1;
+    if (sevA !== sevB) return sevA - sevB;
+    return a.remaining - b.remaining;
+  });
+  return list.map(r => {
+    const sev = (r.dataIssue || r.status === "Critical") ? "critical" : "low";
+    let title, detail;
+    if (r.dataIssue){
+      title = `${r.stock} — data issue`;
+      detail = r.issues.join(" ");
+    } else if (r.remaining <= 0 && r.received > 0){
+      title = `${r.stock} — fully utilized`;
+      detail = `${fmtInt(r.received)} received, none remaining.`;
+    } else {
+      title = `${r.stock} — ${fmtInt(r.remaining)} unit${Math.abs(r.remaining) === 1 ? "" : "s"} remaining`;
+      detail = `${r.status} stock position (${fmtPct(r.utilizationPercentage)} utilized).`;
+    }
+    return { title, detail, sev };
+  });
+}
+
+function generateInsights(cat){
+  const list = categoryRows(cat);
+  const out = [];
+  const lowCritical = list.filter(r => r.status === "Critical" || r.status === "Low").sort((a, b) => a.remaining - b.remaining);
+  lowCritical.slice(0, 2).forEach(r => {
+    if (r.remaining <= 0 && r.received > 0) out.push(`${r.stock} is fully utilized.`);
+    else out.push(`${r.stock} has only ${fmtInt(r.remaining)} unit${Math.abs(r.remaining) === 1 ? "" : "s"} remaining.`);
+  });
+  const unutilized = list.filter(r => r.utilized === 0 && r.received > 0 && r.status !== "Critical" && r.status !== "Low");
+  unutilized.slice(0, 2).forEach(r => {
+    out.push(`${r.stock} has ${fmtInt(r.remaining)} units remaining and has not yet been utilized.`);
+  });
+  if (out.length === 0) out.push(`All ${cat} stock lots are in a healthy or moderate position.`);
+  return out.slice(0, 4);
+}
+
+/* ============================================================
+   RENDER — OVERVIEW
+   ============================================================ */
+function renderOverview(){
+  const grid = $("#overviewGrid");
+  grid.innerHTML = "";
+  CONFIG.CATEGORIES.forEach(cat => {
+    const s = categorySummary(cat);
+    const alerts = generateAlerts(cat);
+    const topAlert = alerts[0];
+    const card = el("button", { class: "overview-card", type: "button", "data-cat": cat });
+    card.innerHTML = `
+      <div class="overview-top">
+        <div class="oc-name"><span class="swatch"></span>${cat}</div>
+        <div class="oc-pct">${fmtPct(s.utilizationPercentage)}</div>
+      </div>
+      <div class="overview-mini">
+        <div><div class="om-label">Received</div><div class="om-value num">${fmtInt(s.totalReceived)}</div></div>
+        <div><div class="om-label">Utilized</div><div class="om-value num">${fmtInt(s.totalUtilized)}</div></div>
+        <div><div class="om-label">Remaining</div><div class="om-value num">${fmtInt(s.totalRemaining)}</div></div>
+      </div>
+      <div class="overview-bar"><div class="overview-bar-fill" style="width:${Math.min(100, Math.max(0, s.utilizationPercentage))}%"></div></div>
+      <div class="overview-flag ${topAlert ? "" : "ok"}">
+        <span class="fdot"></span>
+        <span>${topAlert ? escapeHtml(topAlert.title) : `No critical ${cat} stock issues`}</span>
+      </div>
+    `;
+    card.addEventListener("click", () => switchTab(cat));
+    grid.appendChild(card);
+  });
+
+  CONFIG.CATEGORIES.forEach(cat => {
+    const alerts = generateAlerts(cat).filter(a => a.sev === "critical");
+    const flag = $("#flag" + cat);
+    if (flag){
+      if (alerts.length){ flag.textContent = alerts.length; flag.classList.add("show"); }
+      else { flag.textContent = ""; flag.classList.remove("show"); }
+    }
+  });
+}
+
+/* ============================================================
+   CATEGORY PANEL — SKELETON
+   ============================================================ */
+function buildCategoryPanels(){
+  const host = $("#categoryPanels");
+  host.innerHTML = "";
+  CONFIG.CATEGORIES.forEach(cat => {
+    const section = el("section", { class: "section cat-panel hidden", id: "panel-" + cat, "data-cat": cat });
+    section.innerHTML = `
+      <div class="cat-heading">
+        <span class="swatch"></span>
+        <h2>${cat} inventory</h2>
+        <span class="cat-sub">${CONFIG.CATEGORY_SUBTITLE[cat]}</span>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Received</div><div class="kpi-value num" id="${cat}-kpiReceived">—</div><div class="kpi-sub">Total quantity received to date</div></div>
+        <div class="kpi-card"><div class="kpi-label">Utilized</div><div class="kpi-value num" id="${cat}-kpiUtilized">—</div><div class="kpi-sub" id="${cat}-kpiUtilizedSub">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Remaining</div><div class="kpi-value num" id="${cat}-kpiRemaining">—</div><div class="kpi-sub" id="${cat}-kpiRemainingSub">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Utilization</div><div class="kpi-value num" id="${cat}-kpiUtilization">—</div><div class="kpi-sub">Utilized against received</div></div>
+      </div>
+
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Utilized vs remaining</h3>
+          <p class="chart-note">${cat} stock position</p>
+          <div class="chart-box"><canvas id="${cat}-chartDonut"></canvas>
+            <div class="donut-center"><div class="dc-pct num" id="${cat}-donutPct">—</div><div class="dc-label">utilized</div></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>Utilization by stock lot</h3>
+          <p class="chart-note">Percentage of each ${cat} stock lot utilized</p>
+          <div class="chart-box"><canvas id="${cat}-chartUtilBar"></canvas></div>
+        </div>
+      </div>
+      <div class="chart-grid secondary">
+        <div class="chart-card">
+          <h3>Received, utilized &amp; remaining by stock lot</h3>
+          <p class="chart-note">Compares each ${cat} stock lot side by side</p>
+          <div class="chart-box"><canvas id="${cat}-chartStockBar"></canvas></div>
+        </div>
+      </div>
+
+      <div class="split-grid">
+        <div class="panel-card">
+          <h3>${ICONS.alert} Stock alerts</h3>
+          <ul class="alert-list" id="${cat}-alertList"></ul>
+        </div>
+        <div class="panel-card">
+          <h3>${ICONS.insight} Insights</h3>
+          <ul class="insight-list" id="${cat}-insightList"></ul>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <h2>Stock position</h2>
+        <span class="hint">Dashboard thresholds, not an official reorder policy</span>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-field">
+          <label for="${cat}-filterStock">Stock</label>
+          <select id="${cat}-filterStock"><option value="all">All ${cat} stocks</option></select>
+        </div>
+        <div class="filter-field">
+          <label for="${cat}-filterStatus">Status</label>
+          <select id="${cat}-filterStatus">
+            <option value="all">All</option>
+            <option value="Healthy">Healthy</option>
+            <option value="Moderate">Moderate</option>
+            <option value="Low">Low</option>
+            <option value="Critical">Critical</option>
+            <option value="No Stock">No Stock</option>
+          </select>
+        </div>
+        <div class="filter-field" style="flex:1; min-width:180px;">
+          <label for="${cat}-filterSearch">Search</label>
+          <input type="search" id="${cat}-filterSearch" placeholder="Search stock name…" />
+        </div>
+        <button class="btn btn-sm btn-ghost filter-reset" id="${cat}-resetFilters" type="button">Reset filters</button>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table class="data-table" id="${cat}-table">
+            <thead>
+              <tr>
+                <th data-key="item">Item</th>
+                <th data-key="stock">Stock</th>
+                <th class="num" data-key="received">Received</th>
+                <th class="num" data-key="utilized">Utilized</th>
+                <th class="num" data-key="remaining">Remaining</th>
+                <th class="num" data-key="utilizationPercentage">Utilization</th>
+                <th data-key="status">Status</th>
+              </tr>
+            </thead>
+            <tbody id="${cat}-tableBody"></tbody>
+          </table>
+          <div class="table-empty hidden" id="${cat}-tableEmpty">No stock lots match the current filters.</div>
+        </div>
+        <div class="table-foot">
+          <div class="foot-left">
+            <span id="${cat}-pagerInfo">—</span>
+            <select id="${cat}-perPageSelect" style="background:var(--surface-2); border:1px solid var(--border); color:var(--ink); border-radius:6px; padding:4px 7px; font-size:11.5px;">
+              <option value="10">10 / page</option>
+              <option value="25">25 / page</option>
+              <option value="50">50 / page</option>
+              <option value="all">Show all</option>
+            </select>
+          </div>
+          <div class="pager">
+            <button id="${cat}-pagerPrev" type="button">Prev</button>
+            <span id="${cat}-pagerPage">Page 1</span>
+            <button id="${cat}-pagerNext" type="button">Next</button>
+          </div>
+        </div>
+      </div>
+    `;
+    host.appendChild(section);
+    wireCategoryEvents(cat);
+  });
+}
+
+/* ============================================================
+   CATEGORY — FILTER OPTIONS
+   ============================================================ */
+function populateStockOptions(cat){
+  const sel = $("#" + cat + "-filterStock");
+  const current = sel.value || "all";
+  const stocks = categoryRows(cat).map(r => r.stock);
+  sel.innerHTML = `<option value="all">All ${cat} stocks</option>` +
+    stocks.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+  sel.value = stocks.includes(current) ? current : "all";
+}
+
+function getFilteredSortedRows(cat){
+  const cs = STATE.cat[cat];
+  let list = categoryRows(cat);
+
+  if (cs.filters.stock !== "all") list = list.filter(r => r.stock === cs.filters.stock);
+  if (cs.filters.status !== "all") list = list.filter(r => r.status === cs.filters.status);
+  if (cs.filters.search.trim() !== ""){
+    const q = cs.filters.search.trim().toLowerCase();
+    list = list.filter(r => r.stock.toLowerCase().includes(q));
+  }
+
+  const { key, dir } = cs.sort;
+  const mult = dir === "asc" ? 1 : -1;
+  list = list.slice().sort((a, b) => {
+    let av = a[key], bv = b[key];
+    if (key === "utilizationPercentage"){ av = av === null ? -1 : av; bv = bv === null ? -1 : bv; }
+    if (typeof av === "string") return av.localeCompare(bv) * mult;
+    return ((av ?? 0) - (bv ?? 0)) * mult;
+  });
+  return list;
+}
+
+/* ============================================================
+   CATEGORY — KPIs
+   ============================================================ */
+function renderKPIs(cat){
+  const s = categorySummary(cat);
+  $("#" + cat + "-kpiReceived").textContent = fmtInt(s.totalReceived);
+  $("#" + cat + "-kpiUtilized").textContent = fmtInt(s.totalUtilized);
+  $("#" + cat + "-kpiUtilizedSub").textContent = `${fmtPct(s.utilizationPercentage)} of received`;
+  $("#" + cat + "-kpiRemaining").textContent = fmtInt(s.totalRemaining);
+  $("#" + cat + "-kpiRemainingSub").textContent = `${fmtPct(s.remainingPercentage)} of received`;
+  $("#" + cat + "-kpiUtilization").textContent = fmtPct(s.utilizationPercentage);
+
+  const remainingCard = $("#" + cat + "-kpiRemaining").closest(".kpi-card");
+  remainingCard.style.setProperty("--accent", s.totalRemaining < 0 ? "var(--bad)" : "var(--accent)");
+}
+
+/* ============================================================
+   CATEGORY — CHARTS
+   ============================================================ */
+function categoryAccentColor(cat){
+  return { NIC: "#4F9FE8", DCU: "#37C9BA", SEAL: "#B592E8" }[cat];
+}
+
+function destroyChart(id){
+  if (STATE.charts[id]){ STATE.charts[id].destroy(); delete STATE.charts[id]; }
+}
+
+function renderCharts(cat){
+  const accent = categoryAccentColor(cat);
+  const s = categorySummary(cat);
+  const rows = categoryRows(cat).slice().sort((a, b) => a.remaining - b.remaining);
+
+  ["chartDonut", "chartUtilBar", "chartStockBar"].forEach(k => destroyChart(cat + "-" + k));
+
+  // Donut: utilized vs remaining
+  const donutCtx = $("#" + cat + "-chartDonut");
+  const utilized = Math.max(0, s.totalUtilized);
+  const remaining = Math.max(0, s.totalRemaining);
+  STATE.charts[cat + "-chartDonut"] = new Chart(donutCtx, {
+    type: "doughnut",
+    data: {
+      labels: ["Utilized", "Remaining"],
+      datasets: [{ data: [utilized, remaining], backgroundColor: [accent, "rgba(255,255,255,0.10)"], borderWidth: 0 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: "72%",
+      plugins: { legend: { display: true, position: "bottom", labels: { color: "#96A9BE", boxWidth: 10, font: { size: 11 } } } }
+    }
+  });
+  $("#" + cat + "-donutPct").textContent = fmtPct(s.utilizationPercentage);
+
+  // Horizontal bar: utilization % by stock
+  const utilCtx = $("#" + cat + "-chartUtilBar");
+  const utilRows = rows.filter(r => r.utilizationPercentage !== null);
+  STATE.charts[cat + "-chartUtilBar"] = new Chart(utilCtx, {
+    type: "bar",
+    data: {
+      labels: utilRows.map(r => r.stock),
+      datasets: [{ label: "Utilization %", data: utilRows.map(r => Math.round(r.utilizationPercentage * 100) / 100), backgroundColor: accent, borderRadius: 4, maxBarThickness: 18 }]
+    },
+    options: {
+      indexAxis: "y", responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => c.parsed.x + "%" } } },
+      scales: {
+        x: { min: 0, max: 100, ticks: { color: "#647589", callback: v => v + "%" }, grid: { color: "rgba(255,255,255,0.05)" } },
+        y: { ticks: { color: "#96A9BE", font: { size: 11 } }, grid: { display: false } }
+      }
+    }
+  });
+
+  // Grouped bar: received / utilized / remaining by stock
+  const stockCtx = $("#" + cat + "-chartStockBar");
+  STATE.charts[cat + "-chartStockBar"] = new Chart(stockCtx, {
+    type: "bar",
+    data: {
+      labels: rows.map(r => r.stock),
+      datasets: [
+        { label: "Received", data: rows.map(r => r.received), backgroundColor: "rgba(255,255,255,0.16)", borderRadius: 3, maxBarThickness: 26 },
+        { label: "Utilized", data: rows.map(r => r.utilized), backgroundColor: accent, borderRadius: 3, maxBarThickness: 26 },
+        { label: "Remaining", data: rows.map(r => Math.max(0, r.remaining)), backgroundColor: "rgba(51,198,133,0.55)", borderRadius: 3, maxBarThickness: 26 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: true, position: "bottom", labels: { color: "#96A9BE", boxWidth: 10, font: { size: 11 } } } },
+      scales: {
+        x: { ticks: { color: "#96A9BE", font: { size: 11 } }, grid: { display: false } },
+        y: { ticks: { color: "#647589" }, grid: { color: "rgba(255,255,255,0.05)" }, beginAtZero: true }
+      }
+    }
+  });
+  const stockBox = stockCtx.closest(".chart-box");
+  stockBox.style.height = Math.max(220, rows.length * 34 + 60) + "px";
+}
+
+/* ============================================================
+   CATEGORY — ALERTS + INSIGHTS
+   ============================================================ */
+function renderAlertsAndInsights(cat){
+  const alertList = $("#" + cat + "-alertList");
+  const alerts = generateAlerts(cat);
+  if (alerts.length === 0){
+    alertList.innerHTML = `<li class="empty-note ok">${ICONS.check} No critical ${cat} stock issues right now.</li>`;
+  } else {
+    alertList.innerHTML = alerts.map(a => `
+      <li class="alert-item sev-${a.sev}">
+        <span class="a-dot"></span>
+        <div class="a-body">
+          <div class="a-title">${escapeHtml(a.title)}</div>
+          <div class="a-detail">${escapeHtml(a.detail)}</div>
+        </div>
+      </li>`).join("");
+  }
+
+  const insightList = $("#" + cat + "-insightList");
+  const insights = generateInsights(cat);
+  insightList.innerHTML = insights.map(txt => `<li class="insight-item">${escapeHtml(txt)}</li>`).join("");
+}
+
+/* ============================================================
+   CATEGORY — TABLE
+   ============================================================ */
+function renderTable(cat){
+  const cs = STATE.cat[cat];
+  const full = getFilteredSortedRows(cat);
+  const total = full.length;
+  const perPage = cs.perPage === "all" ? total || 1 : cs.perPage;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  if (cs.page > totalPages) cs.page = totalPages;
+  if (cs.page < 1) cs.page = 1;
+
+  const startIdx = (cs.perPage === "all") ? 0 : (cs.page - 1) * perPage;
+  const endIdx = (cs.perPage === "all") ? total : Math.min(total, startIdx + perPage);
+  const pageRows = full.slice(startIdx, endIdx);
+
+  const tbody = $("#" + cat + "-tableBody");
+  const emptyNote = $("#" + cat + "-tableEmpty");
+
+  if (pageRows.length === 0){
+    tbody.innerHTML = "";
+    emptyNote.classList.remove("hidden");
+  } else {
+    emptyNote.classList.add("hidden");
+    tbody.innerHTML = pageRows.map(r => {
+      const utilPct = r.utilizationPercentage;
+      const utilDisplay = utilPct === null ? "N/A" : fmtPct(utilPct);
+      const barWidth = utilPct === null ? 0 : Math.min(100, Math.max(0, utilPct));
+      const issueFlag = r.dataIssue ? `<span class="issue-flag" title="${escapeHtml(r.issues.join(' '))}">${ICONS.warn}</span>` : "";
+      return `
+        <tr>
+          <td>${escapeHtml(r.item)}</td>
+          <td>${escapeHtml(r.stock)}${issueFlag}</td>
+          <td class="num">${fmtInt(r.received)}</td>
+          <td class="num">${fmtInt(r.utilized)}</td>
+          <td class="num" style="${r.remaining < 0 ? "color:var(--bad); font-weight:700;" : ""}">${fmtInt(r.remaining)}</td>
+          <td class="num"><div class="util-cell"><span class="num">${utilDisplay}</span><span class="util-bar"><span class="util-bar-fill" style="width:${barWidth}%"></span></span></div></td>
+          <td><span class="badge ${statusClass(r.status)}">${r.status}</span></td>
+        </tr>`;
+    }).join("");
+  }
+
+  $("#" + cat + "-pagerInfo").textContent = total === 0
+    ? "Showing 0 of 0 stock lots"
+    : `Showing ${startIdx + 1}–${endIdx} of ${total} stock lot${total === 1 ? "" : "s"}`;
+  $("#" + cat + "-pagerPage").textContent = `Page ${cs.page} of ${totalPages}`;
+  $("#" + cat + "-pagerPrev").disabled = cs.page <= 1;
+  $("#" + cat + "-pagerNext").disabled = cs.page >= totalPages;
+
+  $all("#" + cat + "-table thead th").forEach(th => {
+    const key = th.dataset.key;
+    th.classList.toggle("sorted", key === cs.sort.key);
+    let arrow = th.querySelector(".sort-arrow");
+    if (!arrow){ arrow = document.createElement("span"); arrow.className = "sort-arrow"; th.appendChild(arrow); }
+    arrow.textContent = key === cs.sort.key ? (cs.sort.dir === "asc" ? "▲" : "▼") : "▲▼";
+  });
+}
+
+/* ============================================================
+   CATEGORY — FULL RENDER
+   ============================================================ */
+function renderCategory(cat){
+  populateStockOptions(cat);
+  renderKPIs(cat);
+  renderAlertsAndInsights(cat);
+  renderTable(cat);
+}
+
+function ensureCategoryCharts(cat){
+  if (!STATE.chartsBuilt[cat]){
+    renderCharts(cat);
+    STATE.chartsBuilt[cat] = true;
+  }
+}
+
+/* ============================================================
+   DATA QUALITY
+   ============================================================ */
+function renderDataQuality(){
+  const host = $("#dataQualityBody");
+  if (STATE.warnings.length === 0){
+    host.innerHTML = `<div class="dq-ok">${ICONS.check}<span>No data issues detected.</span></div>`;
+    return;
+  }
+  host.innerHTML = `<ul class="dq-list">` +
+    STATE.warnings.map(w => `<li class="dq-item">${ICONS.warn}<span>${escapeHtml(w)}</span></li>`).join("") +
+    `</ul>`;
+}
+
+/* ============================================================
+   TAB SWITCHING
+   ============================================================ */
+function switchTab(tab){
+  STATE.activeTab = tab;
+
+  $all(".tab").forEach(t => {
+    const isActive = t.dataset.tab === tab;
+    t.classList.toggle("active", isActive);
+    t.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+
+  $("#panel-overview").classList.toggle("hidden", tab !== "overview");
+  CONFIG.CATEGORIES.forEach(cat => {
+    $("#panel-" + cat).classList.toggle("hidden", tab !== cat);
+  });
+
+  if (CONFIG.CATEGORIES.includes(tab)){
+    ensureCategoryCharts(tab);
+  } else {
+    renderOverview();
+  }
+}
+
+function renderAll(){
+  renderOverview();
+  CONFIG.CATEGORIES.forEach(cat => renderCategory(cat));
+  STATE.chartsBuilt = {};
+  renderDataQuality();
+  switchTab(STATE.activeTab);
+}
+
+/* ============================================================
+   CATEGORY EVENT WIRING (bound once, when panels are built)
+   ============================================================ */
+function wireCategoryEvents(cat){
+  const cs = STATE.cat[cat];
+
+  $("#" + cat + "-filterStock").addEventListener("change", e => { cs.filters.stock = e.target.value; cs.page = 1; renderTable(cat); });
+  $("#" + cat + "-filterStatus").addEventListener("change", e => { cs.filters.status = e.target.value; cs.page = 1; renderTable(cat); });
+
+  let searchDebounce;
+  $("#" + cat + "-filterSearch").addEventListener("input", e => {
+    clearTimeout(searchDebounce);
+    const val = e.target.value;
+    searchDebounce = setTimeout(() => { cs.filters.search = val; cs.page = 1; renderTable(cat); }, 150);
+  });
+
+  $("#" + cat + "-resetFilters").addEventListener("click", () => {
+    cs.filters = { stock: "all", status: "all", search: "" };
+    $("#" + cat + "-filterStock").value = "all";
+    $("#" + cat + "-filterStatus").value = "all";
+    $("#" + cat + "-filterSearch").value = "";
+    cs.page = 1;
+    renderTable(cat);
+  });
+
+  $all("#" + cat + "-table thead th").forEach(th => {
+    th.addEventListener("click", () => {
+      const key = th.dataset.key;
+      if (cs.sort.key === key) cs.sort.dir = cs.sort.dir === "asc" ? "desc" : "asc";
+      else { cs.sort.key = key; cs.sort.dir = key === "stock" || key === "item" || key === "status" ? "asc" : "asc"; }
+      renderTable(cat);
+    });
+  });
+
+  $("#" + cat + "-perPageSelect").addEventListener("change", e => {
+    cs.perPage = e.target.value === "all" ? "all" : parseInt(e.target.value, 10);
+    cs.page = 1;
+    renderTable(cat);
+  });
+  $("#" + cat + "-pagerPrev").addEventListener("click", () => { cs.page--; renderTable(cat); });
+  $("#" + cat + "-pagerNext").addEventListener("click", () => { cs.page++; renderTable(cat); });
+}
+
+/* ============================================================
+   CSV EXPORT
+   ============================================================ */
+function csvEscape(v){
+  const s = String(v);
+  if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+function exportCsv(){
+  if (!STATE.rows.length) return;
+  const cat = CONFIG.CATEGORIES.includes(STATE.activeTab) ? STATE.activeTab : null;
+  const rows = cat ? getFilteredSortedRows(cat) : STATE.rows;
+  const header = ["Item", "Stock", "Received", "Utilized", "Remaining", "Utilization %", "Status"];
+  const lines = [header.join(",")];
+  rows.forEach(r => {
+    lines.push([
+      r.item, r.stock, r.received, r.utilized, r.remaining,
+      r.utilizationPercentage === null ? "N/A" : r.utilizationPercentage.toFixed(2),
+      r.status
+    ].map(csvEscape).join(","));
+  });
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const stamp = new Date().toISOString().slice(0, 10);
+  a.download = `yitran-inventory-${cat ? cat.toLowerCase() : "all"}-${stamp}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ============================================================
+   PROGRESS + ERROR UI
+   ============================================================ */
+function setProgressStep(step){
+  $("#progressPanel").style.display = "block";
+  const order = ["read", "validate", "calc", "prepare", "ready"];
+  const idx = order.indexOf(step);
+  order.forEach((s, i) => {
+    const node = $('.progress-step[data-step="' + s + '"]');
+    node.classList.remove("active", "done");
+    if (i < idx) node.classList.add("done");
+    else if (i === idx) node.classList.add("active");
+  });
+}
+function markStepDoneAll(){
+  $all("#progressPanel .progress-step").forEach(n => { n.classList.remove("active"); n.classList.add("done"); });
+}
+function showError(message){
+  $("#errorMessage").textContent = message;
+  $("#errorBanner").classList.add("show");
+  $("#progressPanel").style.display = "none";
+}
+function hideError(){ $("#errorBanner").classList.remove("show"); }
+
+/* ============================================================
+   FILE HANDLING
+   ============================================================ */
+function validateFile(file){
+  const nameLower = file.name.toLowerCase();
+  const okExt = CONFIG.ACCEPTED_EXT.some(ext => nameLower.endsWith(ext));
+  if (!okExt) return "Please upload a .xlsx or .xls Excel workbook.";
+  const sizeMb = file.size / (1024 * 1024);
+  if (sizeMb > CONFIG.MAX_FILE_MB) return `File is too large. Maximum size is ${CONFIG.MAX_FILE_MB} MB.`;
+  return null;
+}
+
+function handleFile(file){
+  hideError();
+  const validationError = validateFile(file);
+  if (validationError){ showError(validationError); return; }
+
+  setProgressStep("read");
+  const reader = new FileReader();
+  reader.onerror = () => showError("Unable to read this file from disk.");
+  reader.onload = (e) => {
+    setTimeout(() => {
+      try {
+        let workbook;
+        try {
+          workbook = XLSX.read(e.target.result, { type: "array" });
+        } catch (err){
+          throw new DashboardError("Unable to read this Excel workbook. It may be corrupted.");
+        }
+        if (!workbook.SheetNames || workbook.SheetNames.length === 0){
+          throw new DashboardError("This workbook appears to be empty.");
+        }
+
+        setProgressStep("validate");
+        const { rows, warnings } = parseWorkbook(workbook);
+
+        setProgressStep("calc");
+        STATE.rows = rows;
+        STATE.warnings = warnings;
+        STATE.fileName = file.name;
+        STATE.loadedAt = new Date();
+        STATE.cat = { NIC: freshCatState(), DCU: freshCatState(), SEAL: freshCatState() };
+        STATE.activeTab = "overview";
+        Object.keys(STATE.charts).forEach(destroyChart);
+        STATE.chartsBuilt = {};
+
+        setProgressStep("prepare");
+        setTimeout(() => {
+          setProgressStep("ready");
+          markStepDoneAll();
+          enterDashboard();
+        }, 150);
+
+      } catch (err){
+        console.error(err);
+        showError(err && err.message ? err.message : "Something went wrong while processing this file.");
+      }
+    }, 120);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function enterDashboard(){
+  $("#emptyState").classList.add("hidden");
+  $("#dashboard").classList.remove("hidden");
+
+  $("#statFileName").textContent = STATE.fileName;
+  $("#statLoadedAt").textContent = fmtDate(STATE.loadedAt);
+  $("#statRecords").textContent = `${STATE.rows.length}`;
+
+  $("#headerFileChip").style.display = "flex";
+  $("#headerFileName").textContent = STATE.fileName;
+  $("#uploadBtnHeaderLabel").textContent = "Replace File";
+  $("#clearFileBtn").classList.remove("hidden");
+  $("#exportCsvBtn").disabled = false;
+
+  buildCategoryPanels();
+  renderAll();
+}
+
+function resetToEmptyState(){
+  Object.keys(STATE.charts).forEach(destroyChart);
+  STATE.rows = [];
+  STATE.warnings = [];
+  STATE.fileName = null;
+  STATE.loadedAt = null;
+  STATE.cat = { NIC: freshCatState(), DCU: freshCatState(), SEAL: freshCatState() };
+  STATE.activeTab = "overview";
+  STATE.chartsBuilt = {};
+
+  $("#dashboard").classList.add("hidden");
+  $("#emptyState").classList.remove("hidden");
+  $("#headerFileChip").style.display = "none";
+  $("#uploadBtnHeaderLabel").textContent = "Upload Excel";
+  $("#clearFileBtn").classList.add("hidden");
+  $("#exportCsvBtn").disabled = true;
+  $("#progressPanel").style.display = "none";
+  $all("#progressPanel .progress-step").forEach(n => n.classList.remove("active", "done"));
+  hideError();
+  $("#fileInput").value = "";
+  $("#categoryPanels").innerHTML = "";
+}
+
+/* ============================================================
+   GLOBAL EVENT WIRING
+   ============================================================ */
+function wireEvents(){
+  const fileInput = $("#fileInput");
+  const dropzone = $("#dropzone");
+  const browseBtn = $("#browseBtn");
+  const uploadBtnHeader = $("#uploadBtnHeader");
+
+  const openPicker = () => fileInput.click();
+  browseBtn.addEventListener("click", openPicker);
+  dropzone.addEventListener("click", openPicker);
+  dropzone.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); openPicker(); } });
+  uploadBtnHeader.addEventListener("click", () => {
+    if (STATE.rows.length) resetToEmptyState();
+    openPicker();
+  });
+
+  fileInput.addEventListener("change", e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+  ["dragenter", "dragover"].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add("dragover"); }));
+  ["dragleave", "drop"].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove("dragover"); }));
+  dropzone.addEventListener("drop", e => { const f = e.dataTransfer.files[0]; if (f) handleFile(f); });
+
+  $("#changeFileBtn").addEventListener("click", () => { resetToEmptyState(); openPicker(); });
+  $("#clearFileBtn").addEventListener("click", resetToEmptyState);
+  $("#exportCsvBtn").addEventListener("click", exportCsv);
+
+  $all(".tab").forEach(t => t.addEventListener("click", () => switchTab(t.dataset.tab)));
+
+  window.addEventListener("resize", debounce(() => {
+    if ($("#dashboard").classList.contains("hidden")) return;
+    Object.keys(STATE.charts).forEach(k => { const c = STATE.charts[k]; if (c) c.resize(); });
+  }, 250));
+}
+
+function debounce(fn, wait){
+  let t; return function(...args){ clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); };
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+function init(){
+  wireEvents();
+}
+document.addEventListener("DOMContentLoaded", init);
+
+})();
+</script>
+</body>
+</html>
