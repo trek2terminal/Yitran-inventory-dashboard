@@ -18,18 +18,18 @@
    Single-file static dashboard
    ========================================================== */
 :root{
-  --bg:#07111f;
-  --bg2:#0a1625;
-  --surface:#0d1b2b;
-  --surface2:#112238;
-  --surface3:#162b43;
-  --border:#263d55;
-  --border2:#1b3046;
-  --text:#f2f6fb;
-  --text2:#a1b1c3;
-  --muted:#6e8195;
-  --blue:#51a9ef;
-  --blue2:#2f73b7;
+  --bg:#0a1422;
+  --bg2:#0e1b2c;
+  --surface:#112235;
+  --surface2:#162b43;
+  --surface3:#1d3854;
+  --border:#2c4965;
+  --border2:#203952;
+  --text:#f5f8fc;
+  --text2:#b6c5d5;
+  --muted:#8ca0b5;
+  --blue:#5db5f4;
+  --blue2:#347fbd;
   --nic:#56aaf0;
   --dcu:#39d0bf;
   --seal:#b895ed;
@@ -43,6 +43,7 @@
   --transition:180ms cubic-bezier(.2,.8,.2,1);
   --font:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
+html[data-theme="dark"]{color-scheme:dark}
 html[data-theme="light"]{
   --bg:#f2f6fb;
   --bg2:#eaf0f6;
@@ -65,6 +66,7 @@ html[data-theme="light"]{
   --shadow:0 18px 44px rgba(34,66,96,.09);
   --shadow2:0 8px 22px rgba(34,66,96,.07);
 }
+html[data-theme="light"]{color-scheme:light}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;min-height:100%;font-family:var(--font);background:var(--bg);color:var(--text)}
 body{line-height:1.45;overflow-x:hidden;transition:background .28s ease,color .28s ease}
@@ -94,12 +96,13 @@ body:before{
   min-height:72px;display:flex;align-items:center;justify-content:space-between;
   gap:18px;padding:12px 0;
 }
-.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
 .logo{
-  width:132px;height:40px;object-fit:contain;object-position:left center;
-  filter:none;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:4px 8px;
-  transition:background .25s ease,border-color .25s ease,transform .2s ease;
+  width:88px;height:40px;object-fit:contain;object-position:left center;
+  filter:none;background:transparent;border:0;border-radius:0;padding:0;
+  transition:transform .2s ease;
 }
+html[data-theme="dark"] .logo{transform:scale(1.2);transform-origin:left center}
 .brand-copy{min-width:0}
 .brand-title{
   font-size:15px;font-weight:850;letter-spacing:.01em;
@@ -182,12 +185,17 @@ main{padding-bottom:40px}
   width:min(460px,100%);border:1px solid var(--border);background:var(--surface);
   border-radius:16px;padding:22px;box-shadow:var(--shadow)
 }
+.loading-overlay.show .loading-card{animation:loadingCardIn .35s cubic-bezier(.2,.8,.2,1)}
+@keyframes loadingCardIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
 .loading-head{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:850}
+.loading-percent{margin-left:auto;color:var(--blue);font-size:12px;font-variant-numeric:tabular-nums}
 .spinner{width:17px;height:17px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .75s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-msg{margin-top:7px;color:var(--text2);font-size:11.5px}
 .loading-progress{height:7px;margin-top:15px;background:var(--surface3);border-radius:99px;overflow:hidden}
-.loading-progress-fill{height:100%;width:12%;background:linear-gradient(90deg,var(--blue2),var(--blue));border-radius:inherit;transition:width .3s ease}
+.loading-progress-fill{position:relative;height:100%;width:12%;background:linear-gradient(90deg,var(--blue2),var(--blue));border-radius:inherit;transition:width .3s ease;overflow:hidden}
+.loading-progress-fill:after{content:"";position:absolute;inset:0;width:45%;background:linear-gradient(90deg,transparent,color-mix(in srgb,#fff 38%,transparent),transparent);animation:progressShine 1.4s ease-in-out infinite}
+@keyframes progressShine{from{transform:translateX(-120%)}to{transform:translateX(250%)}}
 .loading-steps{margin-top:15px;display:grid;gap:6px}
 .load-step{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:11px}
 .load-step.active{color:var(--text)}
@@ -202,6 +210,10 @@ main{padding-bottom:40px}
 .dashboard{display:none}
 .dashboard.show{display:block;animation:dashIn .42s cubic-bezier(.2,.8,.2,1)}
 @keyframes dashIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.dashboard.show > *{animation:contentReveal .45s cubic-bezier(.2,.8,.2,1) both}
+.dashboard.show > *:nth-child(2){animation-delay:.05s}.dashboard.show > *:nth-child(3){animation-delay:.1s}
+.dashboard.show > *:nth-child(4){animation-delay:.15s}.dashboard.show > *:nth-child(5){animation-delay:.2s}
+@keyframes contentReveal{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .filebar{padding:13px 0;border-bottom:1px solid var(--border2)}
 .filebar-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .file-meta{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
@@ -392,7 +404,11 @@ td.num-col{text-align:right;font-variant-numeric:tabular-nums}
 /* ---------- Footer ---------- */
 footer{border-top:1px solid var(--border2);padding:20px 0 27px;margin-top:25px}
 .footer-inner{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
-.footer-left{font-size:11px;font-weight:800}.footer-sub{font-size:10px;color:var(--muted);margin-top:2px}.footer-right{font-size:10px;color:var(--muted)}
+.footer-left{font-size:11px;font-weight:700;letter-spacing:.01em;color:var(--text2)}
+.footer-left a{color:var(--blue);font-weight:850;text-decoration:none;transition:color var(--transition)}
+.footer-left a:hover{color:var(--text);text-decoration:underline}
+.footer-left a:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:2px}
+.footer-sub{font-size:10px;color:var(--muted);margin-top:2px}.footer-credit{font-size:10px;color:var(--muted);margin-top:3px}.footer-right{font-size:10px;color:var(--muted)}
 
 /* ---------- Toast ---------- */
 .toast{
@@ -456,6 +472,7 @@ footer{border-top:1px solid var(--border2);padding:20px 0 27px;margin-top:25px}
 .ov-card::after{transition:transform .35s ease,opacity .35s ease}
 .ov-card:hover::after{transform:scale(1.14);opacity:.88}
 .logo:hover{transform:translateY(-1px)}
+html[data-theme="dark"] .logo:hover{transform:scale(1.2) translateY(-1px)}
 
 </style>
 </head>
@@ -623,11 +640,8 @@ footer{border-top:1px solid var(--border2);padding:20px 0 27px;margin-top:25px}
 
 <footer>
   <div class="wrap footer-inner">
-    <div>
-      <div class="footer-left">Yitran Technologies India Pvt. Ltd.</div>
-      <div class="footer-sub">DCU • NIC • SEAL Inventory Management</div>
-    </div>
-    <div class="footer-right">Dashboard calculations are performed locally from the uploaded workbook.</div>
+    <div class="footer-left">&copy; Yitran Inventory Dashboard <span aria-hidden="true">·</span> built by <a href="https://trek2terminal.github.io" target="_blank" rel="noopener noreferrer">Subradeep</a></div>
+    <div class="footer-right">Runs locally, nothing leaves your browser.</div>
   </div>
 </footer>
 
@@ -643,9 +657,9 @@ footer{border-top:1px solid var(--border2);padding:20px 0 27px;margin-top:25px}
 <!-- LOADING -->
 <div class="loading-overlay" id="loadingOverlay" aria-live="polite">
   <div class="loading-card">
-    <div class="loading-head"><span class="spinner"></span><span id="loadingTitle">Reading workbook</span></div>
+    <div class="loading-head"><span class="spinner" aria-hidden="true"></span><span id="loadingTitle">Reading workbook</span><span class="loading-percent" id="loadingPercent">0%</span></div>
     <div class="loading-msg" id="loadingMsg">Opening the latest Excel file locally.</div>
-    <div class="loading-progress"><div class="loading-progress-fill" id="loadingFill"></div></div>
+    <div class="loading-progress" role="progressbar" aria-label="Workbook loading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="loading-progress-fill" id="loadingFill"></div></div>
     <div class="loading-steps">
       <div class="load-step" data-step="read"><span class="load-dot"></span>Reading workbook</div>
       <div class="load-step" data-step="validate"><span class="load-dot"></span>Validating inventory structure</div>
@@ -969,6 +983,8 @@ function setLoadStep(step,progress,title,msg){
     if(name===step) el.classList.add("active");
   });
   $("#loadingFill").style.width=progress+"%";
+  $("#loadingPercent").textContent=Math.round(progress)+"%";
+  $(".loading-progress").setAttribute("aria-valuenow",String(Math.round(progress)));
   $("#loadingTitle").textContent=title;
   $("#loadingMsg").textContent=msg;
 }
