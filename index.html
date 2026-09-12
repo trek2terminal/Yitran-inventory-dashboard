@@ -102,7 +102,6 @@ body:before{
   filter:none;background:transparent;border:0;border-radius:0;padding:0;
   transition:transform .2s ease;
 }
-html[data-theme="dark"] .logo{transform:scale(1.2);transform-origin:left center}
 .brand-copy{min-width:0}
 .brand-title{
   font-size:15px;font-weight:850;letter-spacing:.01em;
@@ -214,9 +213,13 @@ main{padding-bottom:40px}
 .dashboard.show > *:nth-child(2){animation-delay:.05s}.dashboard.show > *:nth-child(3){animation-delay:.1s}
 .dashboard.show > *:nth-child(4){animation-delay:.15s}.dashboard.show > *:nth-child(5){animation-delay:.2s}
 @keyframes contentReveal{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.filebar{padding:13px 0;border-bottom:1px solid var(--border2)}
+.filebar{padding:13px 0;border-bottom:1px solid var(--border2);transition:padding .55s ease,border-color .55s ease}
 .filebar-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.file-meta{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.file-meta{display:flex;gap:16px;align-items:center;flex-wrap:wrap;max-height:40px;opacity:1;transform:none;overflow:hidden;transition:max-height .55s ease,opacity .4s ease,transform .55s ease}
+.filebar.is-settled{padding:5px 0;border-color:transparent}
+.filebar.is-settled .file-meta{max-height:0;opacity:0;transform:translateY(-8px);pointer-events:none}
+.filebar:hover,.filebar:focus-within{padding:13px 0;border-color:var(--border2)}
+.filebar:hover .file-meta,.filebar:focus-within .file-meta{max-height:40px;opacity:1;transform:none;pointer-events:auto}
 .meta-item{display:flex;align-items:center;gap:6px;color:var(--text2);font-size:11px}
 .meta-item svg{width:13px;height:13px;color:var(--muted)}
 .meta-item strong{color:var(--text)}
@@ -472,7 +475,6 @@ footer{border-top:1px solid var(--border2);padding:20px 0 27px;margin-top:25px}
 .ov-card::after{transition:transform .35s ease,opacity .35s ease}
 .ov-card:hover::after{transform:scale(1.14);opacity:.88}
 .logo:hover{transform:translateY(-1px)}
-html[data-theme="dark"] .logo:hover{transform:scale(1.2) translateY(-1px)}
 
 </style>
 </head>
@@ -497,12 +499,11 @@ html[data-theme="dark"] .logo:hover{transform:scale(1.2) translateY(-1px)}
         <strong id="headerFileName">—</strong>
       </div>
 
-      <button class="btn btn-secondary" id="themeBtn" type="button" title="Switch between dark and light theme">
+      <button class="btn btn-secondary" id="themeBtn" type="button" title="Switch to light theme" aria-label="Switch to light theme">
         <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
           <circle cx="12" cy="12" r="4"></circle>
           <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
         </svg>
-        <span id="themeText">Light Theme</span>
       </button>
 
       <button class="btn" id="pdfBtn" type="button" disabled title="Download the current dashboard view as PDF">
@@ -534,8 +535,8 @@ html[data-theme="dark"] .logo:hover{transform:scale(1.2) translateY(-1px)}
           <h1>Inventory Management System</h1>
           <p>
             Upload the latest Yitran inventory workbook and get a management-ready view of NIC, DCU
-            and SEAL stock. Each material is analyzed independently so the dashboard never confuses
-            one material with another.
+            and SEAL installation progress. Each material is analyzed independently so the dashboard
+            clearly separates installed quantities from available stock.
           </p>
           <div class="hero-pills">
             <span class="pill"><span class="pdot" style="background:var(--nic)"></span>NIC</span>
@@ -587,9 +588,9 @@ html[data-theme="dark"] .logo:hover{transform:scale(1.2) translateY(-1px)}
             </div>
             <div class="meta-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 9h18"></path></svg>
-              <strong id="statRecords">0</strong> stock lots
+              <strong id="statRecords">0</strong> installation lots
             </div>
-            <div class="meta-item meta-ok" id="statDataStatus">✓ Inventory loaded</div>
+            <div class="meta-item meta-ok" id="statDataStatus">✓ Inventory ready</div>
           </div>
 
           <div style="display:flex;gap:7px">
@@ -603,8 +604,8 @@ html[data-theme="dark"] .logo:hover{transform:scale(1.2) translateY(-1px)}
       <section class="section">
         <div class="section-head">
           <div>
-            <h2>Inventory position by material</h2>
-            <p>NIC, DCU and SEAL are deliberately kept separate.</p>
+            <h2>Installation progress by material</h2>
+            <p>NIC, DCU and SEAL are tracked independently.</p>
           </div>
           <div class="hint" style="font-size:10.5px;color:var(--muted)">Click a card to open that material</div>
         </div>
@@ -692,11 +693,11 @@ const CONFIG = {
     SEAL: { startCol: 10 }
   },
   status: {
-    Healthy: "Healthy",
-    Moderate: "Moderate",
-    Low: "Low",
-    Critical: "Critical",
-    NoStock: "No Stock"
+    Pending: "Installation pending",
+    InProgress: "Installation in progress",
+    Replenishment: "Replenishment due",
+    Complete: "Installation complete",
+    NoStock: "No stock available"
   },
   pageSizes: [10,25,50,"all"],
   defaultPageSize: 10
@@ -754,20 +755,20 @@ function parseNumber(raw){
 
 function getStatus(received,utilized,remaining){
   if(received === 0 && utilized === 0) return CONFIG.status.NoStock;
-  if(remaining <= 0) return CONFIG.status.Critical;
+  if(remaining <= 0) return CONFIG.status.Complete;
   const remainPct = safePct(remaining,received);
-  if(remainPct > 50) return CONFIG.status.Healthy;
-  if(remainPct > 20) return CONFIG.status.Moderate;
-  return CONFIG.status.Low;
+  if(remainPct > 50) return CONFIG.status.Pending;
+  if(remainPct > 20) return CONFIG.status.InProgress;
+  return CONFIG.status.Replenishment;
 }
 
 function statusClass(status){
   return ({
-    "Healthy":"healthy",
-    "Moderate":"moderate",
-    "Low":"low",
-    "Critical":"critical",
-    "No Stock":"nostock"
+    "Installation pending":"moderate",
+    "Installation in progress":"moderate",
+    "Replenishment due":"low",
+    "Installation complete":"healthy",
+    "No stock available":"nostock"
   })[status] || "nostock";
 }
 
@@ -945,7 +946,7 @@ function filteredRows(item){
 function stockAlerts(item){
   const rows=itemRows(item);
   return rows
-    .filter(r=>r.status==="Critical" || r.status==="Low" || r.dataIssue)
+    .filter(r=>r.status==="Replenishment due" || r.status==="No stock available" || r.dataIssue)
     .sort((a,b)=>{
       if(a.dataIssue!==b.dataIssue) return a.dataIssue?-1:1;
       return a.remaining-b.remaining;
@@ -957,7 +958,10 @@ function stockAlerts(item){
    ========================================================== */
 function setTheme(){
   document.documentElement.dataset.theme=state.theme;
-  $("#themeText").textContent=state.theme==="dark" ? "Light Theme" : "Dark Theme";
+  const nextTheme=state.theme==="dark" ? "light" : "dark";
+  const themeLabel=`Switch to ${nextTheme} theme`;
+  $("#themeBtn").title=themeLabel;
+  $("#themeBtn").setAttribute("aria-label",themeLabel);
   const logo=$("#brandLogo");
   if(logo){
     logo.src = state.theme==="dark" ? LOGOS.dark : LOGOS.light;
@@ -1056,7 +1060,7 @@ async function handleFile(file){
       throw new Error("Unable to read this Excel workbook. It may be corrupt or unsupported.");
     }
 
-    setLoadStep("calc",64,"Calculating stock position","Calculating Received, Utilized and Remaining for each stock lot.");
+    setLoadStep("calc",64,"Calculating installation position","Calculating received, installed and available quantities for each lot.");
     await new Promise(r=>setTimeout(r,90));
 
     const parsed=parseWorkbook(workbook);
@@ -1103,6 +1107,9 @@ async function handleFile(file){
 function enterDashboard(){
   $("#emptyState").classList.add("hidden");
   $("#dashboard").classList.add("show");
+  const filebar=$(".filebar");
+  filebar.classList.remove("is-settled");
+  clearTimeout(state.filebarTimer);
   $("#headerFileChip").style.display="flex";
   $("#headerFileName").textContent=state.file.name;
   $("#statFile").textContent=state.file.name;
@@ -1110,11 +1117,14 @@ function enterDashboard(){
   $("#statRecords").textContent=String(state.rows.length);
   $("#pdfBtn").disabled=false;
   renderAll();
+  state.filebarTimer=setTimeout(()=>filebar.classList.add("is-settled"),2800);
 }
 
 function showEmptyState(){
   state.rows=[];
   state.warnings=[];
+  clearTimeout(state.filebarTimer);
+  $(".filebar").classList.remove("is-settled");
   Object.keys(state.charts).forEach(destroyChart);
   $("#dashboard").classList.remove("show");
   $("#emptyState").classList.remove("hidden");
@@ -1135,12 +1145,12 @@ function renderOverview(){
   $("#overviewGrid").innerHTML=defs.map(([item,cls,sub])=>{
     const rows=itemRows(item);
     const s=summarize(rows);
-    const alerts=rows.filter(r=>r.status==="Critical"||r.status==="Low");
+    const alerts=rows.filter(r=>r.status==="Replenishment due"||r.status==="No stock available");
     const issues=rows.filter(r=>r.dataIssue);
-    let footer="No low or critical stock lots";
+    let footer="Installation plan is on track";
     let dotClass="";
     if(issues.length){ footer=`${issues.length} data issue${issues.length===1?"":"s"} need review`; dotClass="bad"; }
-    else if(alerts.length){ footer=`${alerts.length} stock lot${alerts.length===1?"":"s"} need attention`; dotClass=alerts.some(r=>r.status==="Critical")?"bad":"warn"; }
+    else if(alerts.length){ footer=`${alerts.length} lot${alerts.length===1?"":"s"} need replenishment`; dotClass="warn"; }
 
     return `
       <button class="ov-card ${cls}" data-overview-jump="${item}">
@@ -1152,13 +1162,13 @@ function renderOverview(){
 
         <div class="ov-metrics">
           <div class="ov-metric"><span>Received</span><b class="num">${fmtInt(s.received)}</b></div>
-          <div class="ov-metric"><span>Utilized</span><b class="num">${fmtInt(s.utilized)}</b></div>
-          <div class="ov-metric"><span>Remaining</span><b class="num">${fmtInt(s.remaining)}</b></div>
+          <div class="ov-metric"><span>Installed</span><b class="num">${fmtInt(s.utilized)}</b></div>
+          <div class="ov-metric"><span>Available</span><b class="num">${fmtInt(s.remaining)}</b></div>
         </div>
 
         <div class="ov-progress">
           <div class="progress-track"><div class="progress-fill" style="width:${clampPct(s.utilizationPercentage)}%"></div></div>
-          <div class="ov-progress-meta"><span>Utilization</span><span>${fmtPct(s.utilizationPercentage)}</span></div>
+          <div class="ov-progress-meta"><span>Installation progress</span><span>${fmtPct(s.utilizationPercentage)}</span></div>
         </div>
 
         <div class="ov-footer">
@@ -1210,19 +1220,19 @@ function renderCategoryShells(){
               <div class="cat-kpi-icon">${icon("box")}</div>
             </div>
             <div class="cat-kpi">
-              <div class="cat-kpi-label">Utilized</div>
+              <div class="cat-kpi-label">Installed</div>
               <div class="cat-kpi-value num" id="${item}-utilized">0</div>
               <div class="cat-kpi-sub" id="${item}-utilized-sub">0.00% of received</div>
               <div class="cat-kpi-icon">${icon("pulse")}</div>
             </div>
             <div class="cat-kpi">
-              <div class="cat-kpi-label">Remaining</div>
+              <div class="cat-kpi-label">Available</div>
               <div class="cat-kpi-value num" id="${item}-remaining">0</div>
               <div class="cat-kpi-sub" id="${item}-remaining-sub">0.00% of received</div>
               <div class="cat-kpi-icon">${icon("remain")}</div>
             </div>
             <div class="cat-kpi">
-              <div class="cat-kpi-label">Stock Lots</div>
+              <div class="cat-kpi-label">Installation Lots</div>
               <div class="cat-kpi-value num" id="${item}-lots">0</div>
               <div class="cat-kpi-sub" id="${item}-status-sub">No records</div>
               <div class="cat-kpi-icon">${icon("chart")}</div>
@@ -1239,11 +1249,11 @@ function renderCategoryShells(){
                 <label>Status</label>
                 <select id="${item}-status-filter">
                   <option value="all">All</option>
-                  <option value="Healthy">Healthy</option>
-                  <option value="Moderate">Moderate</option>
-                  <option value="Low">Low</option>
-                  <option value="Critical">Critical</option>
-                  <option value="No Stock">No Stock</option>
+                  <option value="Installation pending">Installation pending</option>
+                  <option value="Installation in progress">Installation in progress</option>
+                  <option value="Replenishment due">Replenishment due</option>
+                  <option value="Installation complete">Installation complete</option>
+                  <option value="No stock available">No stock available</option>
                 </select>
               </div>
               <div class="field search-field">
@@ -1262,18 +1272,18 @@ function renderCategoryShells(){
           <div class="analytics-grid">
             <article class="chart-card">
               <div class="chart-head">
-                <div><h3>Inventory Position</h3><p>Received, utilized and remaining by ${item} stock lot.</p></div>
+                <div><h3>Installation position</h3><p>Received, installed and available by ${item} lot.</p></div>
               </div>
               <div class="chart-box tall"><canvas id="chart-${item}-position"></canvas><div class="chart-empty" id="empty-${item}-position">${icon("chart")}No stock data matches the current filters.</div></div>
             </article>
 
             <article class="chart-card">
               <div class="chart-head">
-                <div><h3>Utilized vs Remaining</h3><p>Current split within ${item} inventory.</p></div>
+                <div><h3>Installed vs available</h3><p>Current ${item} installation and stock balance.</p></div>
               </div>
               <div class="donut-wrap">
                 <canvas id="chart-${item}-donut"></canvas>
-                <div class="donut-center"><b id="${item}-donut-pct">0%</b><span>Utilized</span></div>
+                <div class="donut-center"><b id="${item}-donut-pct">0%</b><span>Installed</span></div>
                 <div class="chart-empty" id="empty-${item}-donut">${icon("chart")}No inventory available for this view.</div>
               </div>
             </article>
@@ -1282,14 +1292,14 @@ function renderCategoryShells(){
           <div class="analytics-grid two">
             <article class="chart-card">
               <div class="chart-head">
-                <div><h3>Stock Utilization</h3><p>Utilization percentage, highest first.</p></div>
+                <div><h3>Installation progress</h3><p>Installation percentage, highest first.</p></div>
               </div>
               <div class="chart-box tall"><canvas id="chart-${item}-util"></canvas><div class="chart-empty" id="empty-${item}-util">${icon("chart")}No stock data matches the current filters.</div></div>
             </article>
 
             <article class="chart-card">
               <div class="chart-head">
-                <div><h3>Remaining Stock</h3><p>Remaining quantity, lowest first.</p></div>
+                <div><h3>Available stock</h3><p>Available quantity, lowest first.</p></div>
               </div>
               <div class="chart-box tall"><canvas id="chart-${item}-remaining"></canvas><div class="chart-empty" id="empty-${item}-remaining">${icon("chart")}No stock data matches the current filters.</div></div>
             </article>
@@ -1319,11 +1329,11 @@ function renderCategoryShells(){
                 <table id="table-${item}">
                   <thead>
                     <tr>
-                      <th data-sort="stock">Stock <span class="sort-icon">↕</span></th>
+                      <th data-sort="stock">Installation lot <span class="sort-icon">↕</span></th>
                       <th class="num-col" data-sort="received">Received <span class="sort-icon">↕</span></th>
-                      <th class="num-col" data-sort="utilized">Utilized <span class="sort-icon">↕</span></th>
-                      <th class="num-col" data-sort="remaining">Remaining <span class="sort-icon">↕</span></th>
-                      <th class="num-col" data-sort="utilizationPercentage">Utilization <span class="sort-icon">↕</span></th>
+                      <th class="num-col" data-sort="utilized">Installed <span class="sort-icon">↕</span></th>
+                      <th class="num-col" data-sort="remaining">Available <span class="sort-icon">↕</span></th>
+                      <th class="num-col" data-sort="utilizationPercentage">Installation progress <span class="sort-icon">↕</span></th>
                       <th>Status</th>
                     </tr>
                   </thead>
@@ -1379,17 +1389,17 @@ function renderCategory(item){
   $(`#${item}-utilized-sub`).textContent=`${fmtPct(s.utilizationPercentage)} of received`;
   $(`#${item}-remaining-sub`).textContent=`${fmtPct(s.remainingPercentage)} of received`;
 
-  const critical=rows.filter(r=>r.status==="Critical").length;
-  const low=rows.filter(r=>r.status==="Low").length;
+  const replenishment=rows.filter(r=>r.status==="Replenishment due"||r.status==="No stock available").length;
+  const complete=rows.filter(r=>r.status==="Installation complete").length;
   const issue=rows.filter(r=>r.dataIssue).length;
 
   $(`#${item}-status-sub`).textContent=issue
-    ? `${issue} data issue${issue===1?"":"s"} • ${critical} critical`
-    : critical
-      ? `${critical} critical • ${low} low`
-      : low
-        ? `${low} low stock lot${low===1?"":"s"}`
-        : "No low / critical lots";
+    ? `${issue} data issue${issue===1?"":"s"} need review`
+    : replenishment
+      ? `${replenishment} lot${replenishment===1?"":"s"} need replenishment`
+      : complete
+        ? `${complete} installation${complete===1?"":"s"} complete`
+        : "Installation plan is on track";
 
   populateCategoryFilters(item);
   $(`#${item}-status-filter`).value=state.filters[item].status;
@@ -1425,7 +1435,7 @@ function renderCategoryCharts(item){
     return;
   }
 
-  renderBarChart(item,"position",rows,["Received","Utilized","Remaining"],[
+  renderBarChart(item,"position",rows,["Received","Installed","Available"],[
     rows.map(r=>r.received),
     rows.map(r=>r.utilized),
     rows.map(r=>r.remaining)
@@ -1453,7 +1463,7 @@ function renderCategoryCharts(item){
     const colors=item==="NIC"?["#56aaf0","#263a51"]:item==="DCU"?["#39d0bf","#263a51"]:["#b895ed","#263a51"];
     state.charts[`donut-${item}`]=new Chart(donutCanvas,{
       type:"doughnut",
-      data:{labels:["Utilized","Remaining"],datasets:[{data:[Math.max(0,s.utilized),Math.max(0,s.remaining)],backgroundColor:colors,borderWidth:0,hoverOffset:5}]},
+      data:{labels:["Installed","Available"],datasets:[{data:[Math.max(0,s.utilized),Math.max(0,s.remaining)],backgroundColor:colors,borderWidth:0,hoverOffset:5}]},
       options:{
         responsive:true,maintainAspectRatio:false,cutout:"70%",
         plugins:{
@@ -1468,12 +1478,12 @@ function renderCategoryCharts(item){
   }
 
   const sortedUtil=[...rows].sort((a,b)=>b.utilizationPercentage-a.utilizationPercentage);
-  renderBarChart(item,"util",sortedUtil,["Utilization %"],[
+  renderBarChart(item,"util",sortedUtil,["Installation progress %"],[
     sortedUtil.map(r=>r.utilizationPercentage)
   ],"single-percent");
 
   const sortedRem=[...rows].sort((a,b)=>a.remaining-b.remaining);
-  renderBarChart(item,"remaining",sortedRem,["Remaining"],[
+  renderBarChart(item,"remaining",sortedRem,["Available"],[
     sortedRem.map(r=>r.remaining)
   ],"single-remaining");
 }
@@ -1575,16 +1585,16 @@ function renderAlerts(item){
   const box=$(`#${item}-alerts`);
 
   if(!alerts.length){
-    box.innerHTML=`<div class="empty-note ok">✓ No low, critical or data-issue stock lots in ${item}.</div>`;
+    box.innerHTML=`<div class="empty-note ok">✓ No replenishment or data-review items in ${item}.</div>`;
     return;
   }
 
   box.innerHTML=alerts.slice(0,7).map(r=>{
-    const klass=r.dataIssue?"critical":r.status==="Critical"?"critical":"low";
+    const klass=r.dataIssue?"critical":"low";
     const title=r.dataIssue ? `${r.stock} • Data issue` : `${r.stock} • ${r.status}`;
     const detail=r.dataIssue && r.utilized>r.received
-      ? `Utilized ${fmtInt(r.utilized)} against ${fmtInt(r.received)} received (${fmtInt(Math.abs(r.remaining))} unit variance).`
-      : `${fmtInt(Math.max(0,r.remaining))} units remaining • ${fmtPct(r.utilizationPercentage)} utilized.`;
+      ? `Installed ${fmtInt(r.utilized)} against ${fmtInt(r.received)} received (${fmtInt(Math.abs(r.remaining))} unit variance).`
+      : `${fmtInt(Math.max(0,r.remaining))} units available • ${fmtPct(r.utilizationPercentage)} installed.`;
 
     return `
       <div class="alert-item ${klass}">
@@ -1614,23 +1624,23 @@ function renderInsights(item){
   const fullyUtilized=rows.filter(r=>r.received>0 && r.remaining<=0).length;
 
   if(lowest){
-    insights.push(`${lowest.stock} has the lowest remaining balance at ${fmtInt(lowest.remaining)} units.`);
+    insights.push(`${lowest.stock} has the lowest available balance at ${fmtInt(lowest.remaining)} units.`);
   }
   if(highest && highest.stock!==lowest?.stock){
-    insights.push(`${highest.stock} currently carries the largest remaining balance at ${fmtInt(highest.remaining)} units.`);
+    insights.push(`${highest.stock} currently carries the largest available balance at ${fmtInt(highest.remaining)} units.`);
   }
   if(mostUsed){
-    insights.push(`${mostUsed.stock} has the highest utilized quantity at ${fmtInt(mostUsed.utilized)} units.`);
+    insights.push(`${mostUsed.stock} has the highest installed quantity at ${fmtInt(mostUsed.utilized)} units.`);
   }
   if(fullyUtilized){
-    insights.push(`${fullyUtilized} stock lot${fullyUtilized===1?" is":"s are"} fully utilized and should be reviewed before the next issue.`);
+    insights.push(`${fullyUtilized} installation lot${fullyUtilized===1?" is":"s are"} fully installed; confirm the next allocation before issuing more units.`);
   }
   if(s.utilizationPercentage>80){
-    insights.push(`${item} is above 80% utilization overall; stock depletion should be watched closely.`);
+    insights.push(`${item} is above 80% installation progress overall; available stock should be watched closely.`);
   }else if(s.utilizationPercentage<20){
-    insights.push(`${item} is below 20% utilization overall; most received ${item} stock is still available.`);
+    insights.push(`${item} is below 20% installation progress overall; most received ${item} stock is still available.`);
   }else{
-    insights.push(`${item} is at ${fmtPct(s.utilizationPercentage)} utilization with ${fmtInt(s.remaining)} units remaining.`);
+    insights.push(`${item} is at ${fmtPct(s.utilizationPercentage)} installation progress with ${fmtInt(s.remaining)} units available.`);
   }
 
   box.innerHTML=insights.slice(0,5).map(text=>`<div class="insight-item">${icon("bulb")}<span>${escapeHtml(text)}</span></div>`).join("");
@@ -1784,18 +1794,18 @@ function renderQuality(){
 
   const cards=defs.map(item=>{
     const rows=itemRows(item);
-    const critical=rows.filter(r=>r.status==="Critical").length;
-    const low=rows.filter(r=>r.status==="Low").length;
+    const replenishment=rows.filter(r=>r.status==="Replenishment due"||r.status==="No stock available").length;
+    const complete=rows.filter(r=>r.status==="Installation complete").length;
     const issues=rows.filter(r=>r.dataIssue).length;
-    const attention=critical+low+issues;
+    const attention=replenishment+issues;
     const klass=issues?"q-bad":attention?"q-warn":"q-good";
     const subtitle=issues
-      ? `${fmtInt(issues)} data issue${issues===1?"":"s"} • ${fmtInt(critical)} critical`
+      ? `${fmtInt(issues)} data issue${issues===1?"":"s"} need review`
       : attention
-        ? `${fmtInt(critical)} critical • ${fmtInt(low)} low`
-        : "No stock attention items";
+        ? `${fmtInt(replenishment)} lot${replenishment===1?"":"s"} need replenishment`
+        : `${fmtInt(complete)} installation${complete===1?"":"s"} complete`;
     return `<div class="q-card ${klass}">
-      <div class="q-label">${item} stock checks</div>
+      <div class="q-label">${item} installation checks</div>
       <div class="q-value">${attention ? fmtInt(attention) : "✓"}</div>
       <div class="q-sub">${escapeHtml(subtitle)}</div>
     </div>`;
@@ -1844,7 +1854,7 @@ function exportCsv(item){
   }
 
   const lines=[
-    ["Item","Stock","Received","Utilized","Remaining","Utilization %","Status"].join(","),
+    ["Item","Installation lot","Received","Installed","Available","Installation progress %","Status"].join(","),
     ...rows.map(r=>[
       r.item,r.stock,r.received,r.utilized,r.remaining,r.utilizationPercentage.toFixed(2),r.status
     ].map(csvCell).join(","))
@@ -1990,14 +2000,14 @@ async function downloadPdf(item=state.tab){
     pdf.setTextColor(...muted);
     pdf.setFont("helvetica","normal");
     pdf.setFontSize(7.5);
-    pdf.text(`${rows.length} stock lot${rows.length===1?"":"s"} in ${item} inventory`,m,32);
+    pdf.text(`${rows.length} installation lot${rows.length===1?"":"s"} in ${item} inventory`,m,32);
 
     const gap=4;
     const cw=(W-2*m-3*gap)/4;
     card(m,36,cw,29,"Received",fmtInt(s.received),"Total quantity received");
-    card(m+cw+gap,36,cw,29,"Utilized",fmtInt(s.utilized),`${fmtPct(s.utilizationPercentage)} of received`);
-    card(m+2*(cw+gap),36,cw,29,"Remaining",fmtInt(s.remaining),`${fmtPct(s.remainingPercentage)} of received`);
-    card(m+3*(cw+gap),36,cw,29,"Utilization",fmtPct(s.utilizationPercentage),"Category utilization");
+    card(m+cw+gap,36,cw,29,"Installed",fmtInt(s.utilized),`${fmtPct(s.utilizationPercentage)} of received`);
+    card(m+2*(cw+gap),36,cw,29,"Available",fmtInt(s.remaining),`${fmtPct(s.remainingPercentage)} of received`);
+    card(m+3*(cw+gap),36,cw,29,"Installation progress",fmtPct(s.utilizationPercentage),"Category progress");
 
     chartImage(charts.position,m,71,188,62);
     chartImage(charts.donut,m+192,71,96,62);
@@ -2024,7 +2034,7 @@ async function downloadPdf(item=state.tab){
     pdf.setDrawColor(...line);
     pdf.roundedRect(m,tableY,W-2*m,tableH,3,3,"FD");
 
-    const headers=["Stock","Received","Utilized","Remaining","Utilization","Status"];
+    const headers=["Installation lot","Received","Installed","Available","Progress","Status"];
     const xs=[m+7,m+106,m+140,m+174,m+211,m+244];
 
     pdf.setTextColor(...muted);
@@ -2051,7 +2061,7 @@ async function downloadPdf(item=state.tab){
       pdf.text(fmtInt(r.remaining),xs[3],yy,{align:"right"});
       pdf.text(fmtPct(r.utilizationPercentage),xs[4],yy,{align:"right"});
 
-      const sc=r.status==="Critical"?[220,79,94]:r.status==="Low"?[195,133,31]:r.status==="Moderate"?[72,132,193]:r.status==="Healthy"?[47,145,96]:[120,132,145];
+      const sc=r.status==="Replenishment due"?[195,133,31]:r.status==="No stock available"?[120,132,145]:r.status==="Installation complete"?[47,145,96]:[72,132,193];
       pdf.setTextColor(...sc);
       pdf.setFont("helvetica","bold");
       pdf.text(r.status,xs[5],yy,{align:"right"});
