@@ -219,10 +219,10 @@ main{padding-bottom:40px}
 .dashboard.show > *:nth-child(2){animation-delay:.05s}.dashboard.show > *:nth-child(3){animation-delay:.1s}
 .dashboard.show > *:nth-child(4){animation-delay:.15s}.dashboard.show > *:nth-child(5){animation-delay:.2s}
 @keyframes contentReveal{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.filebar{padding:13px 0;border-bottom:1px solid var(--border2);transition:padding .55s ease,border-color .55s ease}
+.filebar{max-height:76px;padding:13px 0;border-bottom:1px solid var(--border2);overflow:hidden;transition:max-height .6s ease,padding .6s ease,border-color .6s ease,opacity .45s ease}
 .filebar-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .file-meta{display:flex;gap:16px;align-items:center;flex-wrap:wrap;max-height:40px;opacity:1;transform:none;overflow:hidden;transition:max-height .55s ease,opacity .4s ease,transform .55s ease}
-.filebar.is-settled{padding:5px 0;border-color:transparent}
+.filebar.is-settled{max-height:0;padding:0;border-color:transparent;opacity:0}
 .filebar.is-settled .file-meta{max-height:0;opacity:0;transform:translateY(-8px);pointer-events:none}
 .filebar:hover,.filebar:focus-within{padding:13px 0;border-color:var(--border2)}
 .filebar:hover .file-meta,.filebar:focus-within .file-meta{max-height:40px;opacity:1;transform:none;pointer-events:auto}
@@ -483,7 +483,7 @@ footer{border-top:1px solid var(--border2);padding:20px 0 27px;margin-top:25px}
   .top-actions{gap:6px}
   .top-actions .btn{min-height:36px}
   .file-meta{gap:9px}
-  .filebar.is-settled{padding:4px 0}
+  .filebar.is-settled{max-height:0;padding:0}
   .section{padding:16px 0}
   .section-head{align-items:flex-start}
   .section-head h2{font-size:14px}
@@ -623,7 +623,6 @@ footer{border-top:1px solid var(--border2);padding:20px 0 27px;margin-top:25px}
             </div>
             <div class="meta-item meta-ok" id="statDataStatus">✓ Inventory ready</div>
           </div>
-
           <div style="display:flex;gap:7px">
             <button class="btn btn-sm" id="changeFileBtn" type="button">Change File</button>
             <button class="btn btn-sm btn-danger" id="clearBtn" type="button">Clear</button>
