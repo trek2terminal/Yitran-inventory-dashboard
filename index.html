@@ -11,6 +11,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
 <style>
 /* ==========================================================
@@ -41,7 +44,8 @@
   --radius:14px;
   --radius2:10px;
   --transition:180ms cubic-bezier(.2,.8,.2,1);
-  --font:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --font:"DM Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --display:"Space Grotesk","DM Sans",ui-sans-serif,system-ui,sans-serif;
 }
 html[data-theme="dark"]{color-scheme:dark}
 html[data-theme="light"]{
@@ -70,6 +74,7 @@ html[data-theme="light"]{color-scheme:light}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;min-height:100%;font-family:var(--font);background:var(--bg);color:var(--text)}
 body{line-height:1.45;overflow-x:hidden;transition:background .28s ease,color .28s ease}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.22;background-image:linear-gradient(color-mix(in srgb,var(--border) 16%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--border) 12%,transparent) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.32),transparent 52%)}
 button,input,select{font:inherit}
 button{cursor:pointer}
 svg{display:block}
@@ -104,7 +109,7 @@ body:before{
 }
 .brand-copy{min-width:0}
 .brand-title{
-  font-size:15px;font-weight:850;letter-spacing:.01em;
+  font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:.01em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .brand-sub{font-size:11px;color:var(--text2);margin-top:2px;white-space:nowrap}
@@ -155,6 +160,7 @@ main{padding-bottom:40px}
 }
 .eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.13em;color:var(--blue);font-weight:900}
 .hero h1{margin:7px 0 9px;font-size:clamp(27px,3.6vw,41px);line-height:1.04;letter-spacing:-.045em}
+.hero h1,.section-head h2,.cat-title{font-family:var(--display)}
 .hero p{margin:0;max-width:720px;color:var(--text2);font-size:13px;line-height:1.7}
 .hero-pills{display:flex;gap:7px;flex-wrap:wrap;margin-top:18px}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:10.5px;font-weight:800}
@@ -317,8 +323,9 @@ main{padding-bottom:40px}
 .analytics-grid.two{grid-template-columns:1fr 1fr;margin-top:13px}
 .chart-card{
   border:1px solid var(--border);background:var(--surface);border-radius:12px;padding:15px 16px;
-  box-shadow:var(--shadow2);min-width:0
+  box-shadow:var(--shadow2);min-width:0;transition:transform var(--transition),border-color var(--transition),box-shadow var(--transition)
 }
+.chart-card:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--blue) 38%,var(--border));box-shadow:var(--shadow)}
 .chart-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .chart-head h3{margin:0;font-size:12.5px;font-weight:900}
 .chart-head p{margin:3px 0 0;color:var(--muted);font-size:10px}
@@ -342,8 +349,9 @@ main{padding-bottom:40px}
 .list{display:flex;flex-direction:column;gap:7px}
 .alert-item,.insight-item{
   display:flex;align-items:flex-start;gap:8px;padding:9px 10px;background:var(--surface2);
-  border:1px solid var(--border2);border-radius:9px
+  border:1px solid var(--border2);border-radius:9px;transition:background var(--transition),border-color var(--transition),transform var(--transition)
 }
+.alert-item:hover,.insight-item:hover{transform:translateX(3px);background:var(--surface3);border-color:var(--border)}
 .alert-item .dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex:none}
 .alert-item.critical .dot{background:var(--bad)}
 .alert-item.low .dot{background:var(--warn)}
@@ -460,6 +468,29 @@ footer{border-top:1px solid var(--border2);padding:20px 0 27px;margin-top:25px}
   .filters .search-field,.reset-wrap{grid-column:auto}
   .cat-actions{width:100%}.cat-actions .btn{flex:1}
   .footer-inner{flex-direction:column}
+}
+
+@media(min-width:1500px){
+  .wrap{width:min(100% - 64px,1840px)}
+  .section{padding:25px 0}
+  .ov-card{padding:21px}
+  .cat-kpi{padding:17px 18px}
+  .chart-box{height:300px}.chart-box.tall{height:390px}
+}
+@media(max-width:680px){
+  .topbar-inner{gap:10px}
+  .brand-title{font-size:13px}
+  .top-actions{gap:6px}
+  .top-actions .btn{min-height:36px}
+  .file-meta{gap:9px}
+  .filebar.is-settled{padding:4px 0}
+  .section{padding:16px 0}
+  .section-head{align-items:flex-start}
+  .section-head h2{font-size:14px}
+  .chart-box,.donut-wrap{height:230px!important}
+  .chart-box.tall{height:275px!important}
+  .chart-head h3{font-size:12px}
+  .chart-head p{max-width:245px}
 }
 
 /* ---------- Reduced motion ---------- */
@@ -625,16 +656,6 @@ footer{border-top:1px solid var(--border2);padding:20px 0 27px;margin-top:25px}
       <!-- CATEGORY VIEWS -->
       <div id="categoryViews"></div>
 
-      <!-- DATA QUALITY -->
-      <section class="section" id="qualitySection">
-        <div class="section-head">
-          <div>
-            <h2>Data quality</h2>
-            <p>Checks applied while reading the latest workbook.</p>
-          </div>
-        </div>
-        <div class="quality-grid" id="qualityGrid"></div>
-      </section>
     </div>
   </div>
 </main>
@@ -962,6 +983,9 @@ function setTheme(){
   const themeLabel=`Switch to ${nextTheme} theme`;
   $("#themeBtn").title=themeLabel;
   $("#themeBtn").setAttribute("aria-label",themeLabel);
+  $("#themeIcon").innerHTML=state.theme==="light"
+    ? '<path d="M21 12.8A8.5 8.5 0 1 1 11.2 3 6.7 6.7 0 0 0 21 12.8Z"></path>'
+    : '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>';
   const logo=$("#brandLogo");
   if(logo){
     logo.src = state.theme==="dark" ? LOGOS.dark : LOGOS.light;
@@ -1461,11 +1485,13 @@ function renderCategoryCharts(item){
     donutCanvas.classList.remove("hidden");
     donutEmpty.classList.remove("show");
     const colors=item==="NIC"?["#56aaf0","#263a51"]:item==="DCU"?["#39d0bf","#263a51"]:["#b895ed","#263a51"];
+    const reducedMotion=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     state.charts[`donut-${item}`]=new Chart(donutCanvas,{
       type:"doughnut",
-      data:{labels:["Installed","Available"],datasets:[{data:[Math.max(0,s.utilized),Math.max(0,s.remaining)],backgroundColor:colors,borderWidth:0,hoverOffset:5}]},
+      data:{labels:["Installed","Available"],datasets:[{data:[Math.max(0,s.utilized),Math.max(0,s.remaining)],backgroundColor:colors,borderWidth:0,hoverOffset:8,spacing:2}]},
       options:{
         responsive:true,maintainAspectRatio:false,cutout:"70%",
+        animation:{duration:reducedMotion?0:900,easing:"easeOutQuart",animateRotate:true,animateScale:true},
         plugins:{
           legend:{position:"bottom",labels:{color:chartColors().text,usePointStyle:true,boxWidth:8,boxHeight:8,font:{size:10}}},
           tooltip:{backgroundColor:state.theme==="dark"?"#122338":"#10243b",titleColor:"#fff",bodyColor:"#fff",callbacks:{
@@ -1514,6 +1540,7 @@ function renderBarChart(item,key,rows,datasetLabels,datasetData,type){
 
   const p=chartColors();
   const palette=item==="NIC"?"#56aaf0":item==="DCU"?"#39d0bf":"#b895ed";
+  const reducedMotion=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const datasets=datasetLabels.map((label,i)=>{
     let color=palette;
@@ -1524,7 +1551,7 @@ function renderBarChart(item,key,rows,datasetLabels,datasetData,type){
     }else{
       color=rows.map(r=>r.remaining<=0?"#ef6d7b":palette);
     }
-    return {label,data:datasetData[i],backgroundColor:color,borderRadius:5,maxBarThickness:19};
+    return {label,data:datasetData[i],backgroundColor:color,borderRadius:6,borderSkipped:false,maxBarThickness:19,hoverBackgroundColor:color};
   });
 
   const horizontal = key!=="position";
@@ -1533,7 +1560,7 @@ function renderBarChart(item,key,rows,datasetLabels,datasetData,type){
     data:{labels:rows.map(r=>r.stock),datasets},
     options:{
       responsive:true,maintainAspectRatio:false,indexAxis:horizontal?"y":"x",
-      animation:{duration:450},
+      animation:{duration:reducedMotion?0:850,easing:"easeOutQuart"},
       plugins:{
         legend:{
           display:datasetLabels.length>1,
@@ -1544,7 +1571,7 @@ function renderBarChart(item,key,rows,datasetLabels,datasetData,type){
           titleColor:"#fff",bodyColor:"#fff",
           callbacks:{
             label:context=>{
-              if(type==="single-percent") return `Utilization: ${fmtPct(Number(context.raw)||0)}`;
+              if(type==="single-percent") return `Installation progress: ${fmtPct(Number(context.raw)||0)}`;
               return `${context.dataset.label}: ${fmtInt(Number(context.raw)||0)}`;
             }
           }
@@ -1777,49 +1804,11 @@ function setTab(item){
   $$(".category-view").forEach(v=>v.classList.toggle("active",v.dataset.category===item));
 
   renderCategory(item);
-  const target=$(`#view-${item}`);
-  target?.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
 $$(".tab").forEach(tab=>{
   tab.addEventListener("click",()=>setTab(tab.dataset.tab));
 });
-
-/* ==========================================================
-   QUALITY
-   ========================================================== */
-function renderQuality(){
-  const defs=["NIC","DCU","SEAL"];
-  const warningCount=state.warnings.length;
-
-  const cards=defs.map(item=>{
-    const rows=itemRows(item);
-    const replenishment=rows.filter(r=>r.status==="Replenishment due"||r.status==="No stock available").length;
-    const complete=rows.filter(r=>r.status==="Installation complete").length;
-    const issues=rows.filter(r=>r.dataIssue).length;
-    const attention=replenishment+issues;
-    const klass=issues?"q-bad":attention?"q-warn":"q-good";
-    const subtitle=issues
-      ? `${fmtInt(issues)} data issue${issues===1?"":"s"} need review`
-      : attention
-        ? `${fmtInt(replenishment)} lot${replenishment===1?"":"s"} need replenishment`
-        : `${fmtInt(complete)} installation${complete===1?"":"s"} complete`;
-    return `<div class="q-card ${klass}">
-      <div class="q-label">${item} installation checks</div>
-      <div class="q-value">${attention ? fmtInt(attention) : "✓"}</div>
-      <div class="q-sub">${escapeHtml(subtitle)}</div>
-    </div>`;
-  }).join("");
-
-  $("#qualityGrid").innerHTML=`
-    <div class="q-card ${warningCount?"q-warn":"q-good"}">
-      <div class="q-label">Workbook validation</div>
-      <div class="q-value">${warningCount ? fmtInt(warningCount) : "✓"}</div>
-      <div class="q-sub">${warningCount ? `${fmtInt(warningCount)} warning${warningCount===1?"":"s"} found while reading the workbook` : "No parser warnings detected"}</div>
-    </div>
-    ${cards}
-  `;
-}
 
 /* ==========================================================
    CHART UTILITIES
@@ -1922,40 +1911,44 @@ async function downloadPdf(item=state.tab){
     function titleBar(){
       pdf.setFillColor(...surface);
       pdf.setDrawColor(...line);
-      pdf.roundedRect(m,6,W-2*m,20,4,4,"FD");
+      pdf.roundedRect(m,6,W-2*m,24,4,4,"FD");
 
       pdf.setFillColor(...accent);
-      pdf.roundedRect(m+6,10,3,12,1.5,1.5,"F");
+      pdf.roundedRect(m+6,11,3,14,1.5,1.5,"F");
 
       pdf.setTextColor(...text);
       pdf.setFont("helvetica","bold");
       pdf.setFontSize(14);
-      pdf.text(`INVENTORY MANAGEMENT SYSTEM • ${item}`,m+14,15);
+      pdf.text(`INVENTORY MANAGEMENT SYSTEM • ${item}`,m+14,16);
 
       pdf.setTextColor(...muted);
       pdf.setFont("helvetica","normal");
       pdf.setFontSize(7);
-      pdf.text(`Generated ${nowText(new Date())}`,W-m,15,{align:"right"});
+      pdf.text("Installation inventory report",m+14,23);
 
       try{
         pdf.addImage(
           LOGOS[dark?"dark":"light"],
           "PNG",
-          W-m-34,9,30,14,
+          W-m-32,9,26,12,
           "YITRAN",
           "FAST"
         );
       }catch(e){}
+      pdf.setTextColor(...muted);
+      pdf.setFont("helvetica","normal");
+      pdf.setFontSize(6.5);
+      pdf.text(`Generated ${nowText(new Date())}`,W-m,24,{align:"right"});
     }
 
     function footer(page,total){
       pdf.setDrawColor(...line);
-      pdf.line(m,H-8,W-m,H-8);
+      pdf.line(m,H-9,W-m,H-9);
       pdf.setTextColor(...muted);
       pdf.setFont("helvetica","normal");
       pdf.setFontSize(7);
-      pdf.text("Yitran Technologies India Pvt. Ltd. • Inventory Management System",m,H-3.7);
-      pdf.text(`Page ${page} of ${total}`,W-m,H-3.7,{align:"right"});
+      pdf.text("Yitran Technologies India Pvt. Ltd. • Confidential management report",m,H-4.5);
+      pdf.text(`Page ${page} of ${total}`,W-m,H-4.5,{align:"right"});
     }
 
     function card(x,y,w,h,label,value,sub){
@@ -1993,6 +1986,16 @@ async function downloadPdf(item=state.tab){
       }catch(e){ return false; }
     }
 
+
+    function reportStatus(status){
+      return ({
+        "Installation pending":"Pending",
+        "Installation in progress":"In progress",
+        "Replenishment due":"Replenish",
+        "Installation complete":"Complete",
+        "No stock available":"No stock"
+      })[status] || status;
+    }
     // PAGE 1 — summary
     pageBg();
     titleBar();
@@ -2000,17 +2003,17 @@ async function downloadPdf(item=state.tab){
     pdf.setTextColor(...muted);
     pdf.setFont("helvetica","normal");
     pdf.setFontSize(7.5);
-    pdf.text(`${rows.length} installation lot${rows.length===1?"":"s"} in ${item} inventory`,m,32);
+    pdf.text(`${rows.length} installation lot${rows.length===1?"":"s"} in ${item} inventory`,m,35);
 
     const gap=4;
     const cw=(W-2*m-3*gap)/4;
-    card(m,36,cw,29,"Received",fmtInt(s.received),"Total quantity received");
-    card(m+cw+gap,36,cw,29,"Installed",fmtInt(s.utilized),`${fmtPct(s.utilizationPercentage)} of received`);
-    card(m+2*(cw+gap),36,cw,29,"Available",fmtInt(s.remaining),`${fmtPct(s.remainingPercentage)} of received`);
-    card(m+3*(cw+gap),36,cw,29,"Installation progress",fmtPct(s.utilizationPercentage),"Category progress");
+    card(m,40,cw,29,"Received",fmtInt(s.received),"Total quantity received");
+    card(m+cw+gap,40,cw,29,"Installed",fmtInt(s.utilized),`${fmtPct(s.utilizationPercentage)} of received`);
+    card(m+2*(cw+gap),40,cw,29,"Available",fmtInt(s.remaining),`${fmtPct(s.remainingPercentage)} of received`);
+    card(m+3*(cw+gap),40,cw,29,"Installation progress",fmtPct(s.utilizationPercentage),"Category progress");
 
-    chartImage(charts.position,m,71,188,62);
-    chartImage(charts.donut,m+192,71,96,62);
+    chartImage(charts.position,m,76,188,72);
+    chartImage(charts.donut,m+192,76,96,72);
 
     footer(1,2);
 
@@ -2022,14 +2025,14 @@ async function downloadPdf(item=state.tab){
     pdf.setTextColor(...text);
     pdf.setFont("helvetica","bold");
     pdf.setFontSize(10);
-    pdf.text("Stock-wise analysis",m,32);
+    pdf.text("Stock-wise analysis",m,35);
 
-    chartImage(charts.util,m,37,140,66);
-    chartImage(charts.remaining,m+145,37,143,66);
+    chartImage(charts.util,m,41,140,60);
+    chartImage(charts.remaining,m+145,41,143,60);
 
     // Detail table
-    const tableY=108;
-    const tableH=83;
+    const tableY=106;
+    const tableH=86;
     pdf.setFillColor(...surface);
     pdf.setDrawColor(...line);
     pdf.roundedRect(m,tableY,W-2*m,tableH,3,3,"FD");
@@ -2062,10 +2065,15 @@ async function downloadPdf(item=state.tab){
       pdf.text(fmtPct(r.utilizationPercentage),xs[4],yy,{align:"right"});
 
       const sc=r.status==="Replenishment due"?[195,133,31]:r.status==="No stock available"?[120,132,145]:r.status==="Installation complete"?[47,145,96]:[72,132,193];
-      pdf.setTextColor(...sc);
+      const statusText=reportStatus(r.status);
+      pdf.setFillColor(...sc);
+      pdf.roundedRect(xs[5]-27,yy-4.3,27,5.4,1.4,1.4,"F");
       pdf.setFont("helvetica","bold");
-      pdf.text(r.status,xs[5],yy,{align:"right"});
+      pdf.setTextColor(255,255,255);
+      pdf.setFontSize(6.2);
+      pdf.text(statusText,xs[5]-2,yy-0.1,{align:"right"});
       pdf.setFont("helvetica","normal");
+      pdf.setFontSize(7);
 
       yy+=6.2;
     });
@@ -2080,7 +2088,7 @@ async function downloadPdf(item=state.tab){
       pdf.setTextColor(180,105,20);
       pdf.setFont("helvetica","bold");
       pdf.setFontSize(6.8);
-      pdf.text(`Data quality: ${state.warnings.length} warning${state.warnings.length===1?"":"s"} found during workbook validation.`,m+7,203);
+      pdf.text(`Validation note: ${state.warnings.length} warning${state.warnings.length===1?"":"s"} found while reading the workbook.`,m+7,203);
     }
 
     footer(2,2);
@@ -2109,7 +2117,6 @@ function renderAll(){
     $(`#view-${item}`).classList.toggle("active",state.tab===item);
   });
   renderCategory(state.tab);
-  renderQuality();
   renderAllChartsOnly();
 }
 
