@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -98,6 +98,7 @@ body:before{
   backdrop-filter:blur(16px);
   border-bottom:1px solid var(--border2);
 }
+.topbar:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#f47820 0 9%,#1b73b6 9% 72%,#2eb8e7 72% 100%);opacity:.95}
 .topbar-inner{
   min-height:72px;display:flex;align-items:center;justify-content:space-between;
   gap:18px;padding:12px 0;
@@ -154,6 +155,8 @@ main{padding-bottom:40px}
   border:1px solid var(--border);background:linear-gradient(135deg,var(--surface),var(--surface2));
   border-radius:var(--radius);box-shadow:var(--shadow);
 }
+.hero-main{background:linear-gradient(135deg,color-mix(in srgb,var(--surface) 94%,#fff),color-mix(in srgb,var(--blue) 7%,var(--surface2)));}
+.hero-main:before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:linear-gradient(var(--blue2),#2bb9e8);}
 .hero-main{padding:28px 30px;position:relative;overflow:hidden}
 .hero-main:after{
   content:"";position:absolute;right:-80px;top:-100px;width:260px;height:260px;border-radius:50%;
@@ -441,6 +444,19 @@ td.num-col{text-align:right;font-variant-numeric:tabular-nums}
 .q-sub{font-size:10px;color:var(--text2);margin-top:3px}
 .q-good{border-color:rgba(55,207,136,.25)}.q-warn{border-color:rgba(239,188,96,.28)}.q-bad{border-color:rgba(239,109,123,.28)}
 
+/* ---------- Manager summary ---------- */
+.manager-snapshot{padding:20px 0 4px;border-bottom:1px solid var(--border2)}
+.manager-titlebar{display:flex;align-items:center;gap:10px;padding:11px 16px;color:#fff;background:linear-gradient(100deg,#104875 0 47%,#1b77b4 47% 100%);border-radius:10px 10px 0 0;box-shadow:0 8px 20px rgba(20,82,126,.14)}
+.manager-titlebar h2{margin:0;font-family:var(--display);font-size:18px;letter-spacing:-.02em}.manager-titlebar svg{width:21px;height:21px}
+.manager-table-shell{overflow:auto;border:1px solid var(--border);border-top:0;border-radius:0 0 10px 10px;background:var(--surface);box-shadow:var(--shadow2)}
+.manager-table{width:100%;min-width:780px;border-collapse:collapse}.manager-table th{padding:10px 12px;background:var(--surface2);color:var(--muted);font-size:9px;text-align:left;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}.manager-table td{padding:11px 12px;border-top:1px solid var(--border2);font-size:11px;white-space:nowrap}.manager-table .num{text-align:center;font-weight:900;color:var(--text)}
+.manager-component{display:flex;align-items:center;gap:9px;font-weight:900;font-size:12px}.manager-component small{display:block;color:var(--muted);font-size:9px;font-weight:600}.manager-swatch{width:9px;height:28px;border-radius:5px;background:var(--manager-color)}
+.manager-status{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:99px;color:#fff;background:#159653;font-size:10px;font-weight:900}.manager-status.warn{background:#c3820b}.manager-status:before{content:"✓";display:grid;place-items:center;width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.2)}
+.manager-util{display:flex;align-items:center;gap:9px;min-width:155px}.manager-util strong{color:var(--manager-color);font-size:12px}.manager-util-track{height:8px;flex:1;border-radius:99px;background:var(--surface3);overflow:hidden}.manager-util-fill{height:100%;border-radius:inherit;background:var(--manager-color);transition:width .85s cubic-bezier(.2,.8,.2,1)}
+.manager-roles{display:grid;grid-template-columns:repeat(3,1fr) minmax(210px,.8fr);gap:10px;margin-top:10px}.role-card,.manager-note{border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:12px;box-shadow:var(--shadow2)}.role-card{position:relative;overflow:hidden}.role-card:after{content:"";position:absolute;right:-28px;bottom:-32px;width:85px;height:85px;border-radius:50%;background:color-mix(in srgb,var(--manager-color) 12%,transparent)}.role-card h3{margin:0;color:var(--manager-color);font-size:14px}.role-card p{margin:2px 0 8px;color:var(--muted);font-size:9.5px}.role-card ul{margin:0;padding-left:15px;color:var(--text2);font-size:10px;line-height:1.55}.role-card li::marker{color:var(--manager-color)}.role-health{position:relative;z-index:1;margin-top:10px;padding:8px;border-radius:8px;background:color-mix(in srgb,var(--ok) 8%,var(--surface2));color:var(--ok);font-size:10px;font-weight:900}.manager-note{background:linear-gradient(145deg,#fff9dc,#fff1b8);border-color:#efd27a;color:#174365}.manager-note h3{margin:0 0 7px;color:#ec5a1b;font-family:var(--display);font-size:17px}.manager-note p{margin:0;font-size:10.5px;line-height:1.55}.manager-note strong{color:#ee5c1d}.manager-note .note-rule{height:2px;width:70%;margin:7px 0;background:#ee7728;border-radius:99px}
+@media(max-width:1160px){.manager-roles{grid-template-columns:repeat(3,1fr)}.manager-note{grid-column:1/-1}}
+@media(max-width:700px){.manager-snapshot{padding-top:14px}.manager-titlebar h2{font-size:15px}.manager-roles{grid-template-columns:1fr}.manager-note{grid-column:auto}}
+
 /* ---------- Toast ---------- */
 .toast{
   position:fixed;right:20px;bottom:20px;z-index:180;width:min(390px,calc(100vw - 40px));
@@ -450,6 +466,8 @@ td.num-col{text-align:right;font-variant-numeric:tabular-nums}
   transition:opacity .35s ease,transform .45s cubic-bezier(.2,.8,.2,1)
 }
 .toast.show{opacity:1;transform:none}
+.toast.show .toast-icon{animation:toastPop .42s cubic-bezier(.2,.8,.2,1)}
+@keyframes toastPop{from{opacity:0;transform:scale(.65) rotate(-8deg)}to{opacity:1;transform:none}}
 .toast.hide{opacity:0;transform:translateY(16px)}
 .toast-icon{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:rgba(55,207,136,.11);color:var(--ok);flex:none}
 .toast-icon.warning{background:rgba(239,188,96,.12);color:var(--warn)}
@@ -525,6 +543,14 @@ td.num-col{text-align:right;font-variant-numeric:tabular-nums}
 .ov-card::after{transition:transform .35s ease,opacity .35s ease}
 .ov-card:hover::after{transform:scale(1.14);opacity:.88}
 .logo:hover{transform:translateY(-1px)}
+
+/* Reference-inspired print-style hierarchy for processed inventory. */
+html[data-theme="light"] .section-head h2{font-size:18px;color:#123d68}
+html[data-theme="light"] .section-head h2:before{content:"";display:inline-block;width:22px;height:4px;margin:0 8px 4px 0;border-radius:99px;background:var(--blue)}
+html[data-theme="light"] .ov-card{border-radius:11px;background:linear-gradient(135deg,#fff,#f1f9fd)}
+html[data-theme="light"] .cat-kpi-value{color:#123d68}
+html[data-theme="light"] .filter-panel,html[data-theme="light"] .chart-card,html[data-theme="light"] .panel,html[data-theme="light"] .table-shell{box-shadow:0 10px 28px rgba(26,82,119,.08)}
+html[data-theme="light"] .dashboard.show > *{animation-duration:.56s}
 
 </style>
 </head>
@@ -653,6 +679,8 @@ td.num-col{text-align:right;font-variant-numeric:tabular-nums}
         </div>
       </section>
 
+      <section class="manager-snapshot" id="managerSnapshot" aria-label="Manager inventory summary"></section>
+
       <!-- SEPARATE MATERIAL OVERVIEW -->
       <section class="section">
         <div class="section-head">
@@ -778,7 +806,7 @@ const state = {
   page: { NIC:1, DCU:1, SEAL:1 },
   pageSize: { NIC:10, DCU:10, SEAL:10 },
   charts: {},
-  theme: (() => { try { return localStorage.getItem("yitran-theme") === "light" ? "light" : "dark"; } catch(e) { return "dark"; } })(),
+  theme: (() => { try { return localStorage.getItem("yitran-theme") === "dark" ? "dark" : "light"; } catch(e) { return "light"; } })(),
   toastTimer: null,
   toastHideTimer: null
 };
@@ -1283,6 +1311,31 @@ function startOnboarding(){
 /* ==========================================================
    OVERVIEW
    ========================================================== */
+function renderManagerSnapshot(){
+  const definitions={
+    NIC:{name:"Network Interface Card",color:"var(--nic)",role:"Network connectivity",bullets:["Enables network connectivity","Supports multiple communication modes","Ensures secure data transmission"]},
+    DCU:{name:"Data Concentrator Unit",color:"var(--dcu)",role:"Field gateway",bullets:["Acts as a field gateway for smart meters","Handles communication modules","Aggregates and forwards data to MDM"]},
+    SEAL:{name:"Meter Seal",color:"var(--seal)",role:"Tamper-proof security",bullets:["Provides tamper-proof security","Ensures meter integrity","Prevents unauthorized access"]}
+  };
+  const summaries=["NIC","DCU","SEAL"].map(item=>({item,summary:summarize(itemRows(item)),rows:itemRows(item),definition:definitions[item]}));
+  const tableRows=summaries.map(({item,summary,rows,definition})=>{
+    const buffer=Math.max(1,Math.round(summary.received*.1));
+    const needsRestock=summary.remaining<=buffer || rows.some(row=>row.dataIssue);
+    return `<tr>
+      <td><div class="manager-component" style="--manager-color:${definition.color}"><span class="manager-swatch"></span><div>${item}<small>${definition.name}</small></div></div></td>
+      <td class="num">${fmtInt(summary.received)}</td><td class="num">${fmtInt(summary.utilized)}</td><td class="num">${fmtInt(summary.remaining)}</td><td class="num">${fmtInt(buffer)}</td>
+      <td><span class="manager-status ${needsRestock?"warn":""}">${needsRestock?"Restock alert":"Healthy"}</span></td>
+      <td><div class="manager-util" style="--manager-color:${definition.color}"><strong>${fmtPct(summary.utilizationPercentage)}</strong><span class="manager-util-track"><span class="manager-util-fill" style="width:${clampPct(summary.utilizationPercentage)}%"></span></span></div></td>
+    </tr>`;
+  }).join("");
+  const roleCards=summaries.map(({item,summary,definition})=>`<article class="role-card" style="--manager-color:${definition.color}"><h3>${item}</h3><p>${definition.name}</p><ul>${definition.bullets.map(text=>`<li>${escapeHtml(text)}</li>`).join("")}</ul><div class="role-health">Inventory health · ${fmtInt(summary.remaining)} available</div></article>`).join("");
+  const lowest=summaries.slice().sort((a,b)=>a.summary.remainingPercentage-b.summary.remainingPercentage)[0];
+  $("#managerSnapshot").innerHTML=`
+    <div class="manager-titlebar">${icon("box")}<h2>Hardware Inventory Details</h2></div>
+    <div class="manager-table-shell"><table class="manager-table"><thead><tr><th>Component</th><th>Total allocated</th><th>Installed / deployed</th><th>Available stock</th><th>Planning buffer</th><th>Status</th><th>Stock utilization</th></tr></thead><tbody>${tableRows}</tbody></table></div>
+    <div class="manager-roles">${roleCards}<aside class="manager-note"><h3>Note</h3><div class="note-rule"></div><p>${lowest.item} has the tightest remaining stock position. Keep at least <strong>${fmtInt(Math.max(1,Math.round(lowest.summary.received*.1)))} units</strong> available as the planning buffer before the next allocation cycle.</p></aside></div>`;
+}
+
 function renderOverview(){
   const defs=[
     ["NIC","nic","Network Interface Cards"],
@@ -2235,6 +2288,7 @@ async function downloadPdf(item=state.tab){
    ========================================================== */
 function renderAll(){
   if(!state.rows.length) return;
+  renderManagerSnapshot();
   renderOverview();
   renderCategoryShells();
   ["NIC","DCU","SEAL"].forEach(item=>{
