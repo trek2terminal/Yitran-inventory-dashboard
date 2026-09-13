@@ -285,6 +285,7 @@ main{padding-bottom:40px}
 .ov-card.seal{--cat:var(--seal);--shade:rgba(184,149,237,.09)}
 .ov-head{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:9px}
 .ov-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:900}
+.overview-photo{width:42px;height:34px;object-fit:contain;flex:none;background:transparent;border:0;padding:0;filter:drop-shadow(0 4px 5px rgba(16,54,84,.16));transition:transform .25s ease,filter .25s ease}.ov-card:hover .overview-photo{transform:translateY(-2px) scale(1.05);filter:drop-shadow(0 7px 7px rgba(16,54,84,.22))}
 .swatch{width:9px;height:9px;border-radius:3px;background:var(--cat)}
 .ov-util{font-size:19px;font-weight:950;color:var(--cat)}
 .ov-sub{position:relative;z-index:1;margin-top:2px;color:var(--muted);font-size:10.5px}
@@ -698,9 +699,9 @@ html[data-theme="light"] .dashboard.show > *{animation-duration:.56s}
       <!-- CATEGORY NAV -->
       <section class="section" style="padding-top:12px">
         <div class="tabs" id="tabs" role="tablist" aria-label="Inventory category">
-          <button class="tab active" data-tab="NIC" role="tab" aria-selected="true"><span class="tab-dot"></span>NIC</button>
-          <button class="tab" data-tab="DCU" role="tab" aria-selected="false"><span class="tab-dot"></span>DCU</button>
-          <button class="tab" data-tab="SEAL" role="tab" aria-selected="false"><span class="tab-dot"></span>SEAL</button>
+          <button class="tab active" data-tab="NIC" role="tab" aria-selected="true">NIC</button>
+          <button class="tab" data-tab="DCU" role="tab" aria-selected="false">DCU</button>
+          <button class="tab" data-tab="SEAL" role="tab" aria-selected="false">SEAL</button>
         </div>
       </section>
 
@@ -791,6 +792,12 @@ const CONFIG = {
   },
   pageSizes: [10,25,50,"all"],
   defaultPageSize: 10
+};
+
+const PHOTO_FALLBACKS = {
+  NIC: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=320&q=85",
+  DCU: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=320&q=85",
+  SEAL: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=320&q=85"
 };
 
 /* ==========================================================
@@ -1323,13 +1330,13 @@ function renderManagerSnapshot(){
     const buffer=Math.max(1,Math.round(summary.received*.1));
     const needsRestock=summary.remaining<=buffer || rows.some(row=>row.dataIssue);
     return `<tr>
-      <td><div class="manager-component" style="--manager-color:${definition.color}"><img class="component-photo" src="${definition.photo}" alt="${definition.name}" onerror="this.hidden=true"><span class="manager-swatch"></span><div>${item}<small>${definition.name}</small></div></div></td>
+      <td><div class="manager-component" style="--manager-color:${definition.color}"><img class="component-photo" src="${definition.photo}" data-fallback="${PHOTO_FALLBACKS[item]}" alt="${definition.name}" onerror="this.onerror=null;this.src=this.dataset.fallback"><span class="manager-swatch"></span><div>${item}<small>${definition.name}</small></div></div></td>
       <td class="num">${fmtInt(summary.received)}</td><td class="num">${fmtInt(summary.utilized)}</td><td class="num">${fmtInt(summary.remaining)}</td><td class="num">${fmtInt(buffer)}</td>
       <td><span class="manager-status ${needsRestock?"warn":""}">${needsRestock?"Restock alert":"Healthy"}</span></td>
       <td><div class="manager-util" style="--manager-color:${definition.color}"><strong>${fmtPct(summary.utilizationPercentage)}</strong><span class="manager-util-track"><span class="manager-util-fill" style="width:${clampPct(summary.utilizationPercentage)}%"></span></span></div></td>
     </tr>`;
   }).join("");
-  const roleCards=summaries.map(({item,summary,definition})=>`<article class="role-card" style="--manager-color:${definition.color}"><div class="role-head"><img class="role-photo" src="${definition.photo}" alt="${definition.name}" onerror="this.hidden=true"><div><h3>${item}</h3><p>${definition.name}</p></div></div><ul>${definition.bullets.map(text=>`<li>${escapeHtml(text)}</li>`).join("")}</ul><div class="role-health">Inventory health · ${fmtInt(summary.remaining)} available</div></article>`).join("");
+  const roleCards=summaries.map(({item,summary,definition})=>`<article class="role-card" style="--manager-color:${definition.color}"><div class="role-head"><img class="role-photo" src="${definition.photo}" data-fallback="${PHOTO_FALLBACKS[item]}" alt="${definition.name}" onerror="this.onerror=null;this.src=this.dataset.fallback"><div><h3>${item}</h3><p>${definition.name}</p></div></div><ul>${definition.bullets.map(text=>`<li>${escapeHtml(text)}</li>`).join("")}</ul><div class="role-health">Inventory health · ${fmtInt(summary.remaining)} available</div></article>`).join("");
   const lowest=summaries.slice().sort((a,b)=>a.summary.remainingPercentage-b.summary.remainingPercentage)[0];
   $("#managerSnapshot").innerHTML=`
     <div class="manager-titlebar">${icon("box")}<h2>Hardware Inventory Details</h2></div>
@@ -1339,12 +1346,12 @@ function renderManagerSnapshot(){
 
 function renderOverview(){
   const defs=[
-    ["NIC","nic","Network Interface Cards"],
-    ["DCU","dcu","Data Concentrator Units"],
-    ["SEAL","seal","Meter Seals"]
+    ["NIC","nic","Network Interface Cards","assets/nic.png"],
+    ["DCU","dcu","Data Concentrator Units","assets/dcu.png"],
+    ["SEAL","seal","Meter Seals","assets/seal.png"]
   ];
 
-  $("#overviewGrid").innerHTML=defs.map(([item,cls,sub])=>{
+  $("#overviewGrid").innerHTML=defs.map(([item,cls,sub,photo])=>{
     const rows=itemRows(item);
     const s=summarize(rows);
     const alerts=rows.filter(r=>r.status==="Replenishment due"||r.status==="No stock available");
@@ -1357,7 +1364,7 @@ function renderOverview(){
     return `
       <button class="ov-card ${cls}" data-overview-jump="${item}">
         <div class="ov-head">
-          <div class="ov-title"><span class="swatch"></span>${item}</div>
+          <div class="ov-title"><img class="overview-photo" src="${photo}" data-fallback="${PHOTO_FALLBACKS[item]}" alt="${sub}" onerror="this.onerror=null;this.src=this.dataset.fallback">${item}</div>
           <div class="ov-util">${fmtPct(s.utilizationPercentage)}</div>
         </div>
         <div class="ov-sub">${sub}</div>
