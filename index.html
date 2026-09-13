@@ -14,6 +14,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://images.unsplash.com">
+<link rel="preload" as="image" href="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&amp;fit=crop&amp;w=320&amp;q=85" fetchpriority="high">
+<link rel="preload" as="image" href="https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&amp;fit=crop&amp;w=320&amp;q=85" fetchpriority="high">
+<link rel="preload" as="image" href="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&amp;fit=crop&amp;w=320&amp;q=85" fetchpriority="high">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
 <style>
@@ -55,11 +59,11 @@ html[data-theme="light"]{
   --surface:#f8fbfd;
   --surface2:#eef4f8;
   --surface3:#e3edf3;
-  --border:#c7d7e3;
-  --border2:#d7e3eb;
-  --text:#10243b;
-  --text2:#5e7288;
-  --muted:#7f91a3;
+  --border:#b8ccdb;
+  --border2:#cbdbe6;
+  --text:#102f4d;
+  --text2:#3f5b75;
+  --muted:#607991;
   --blue:#2f73b7;
   --blue2:#1f5e99;
   --nic:#267cc4;
@@ -267,7 +271,7 @@ main{padding-bottom:40px}
 .section{padding:20px 0}
 .section + .section{border-top:1px solid var(--border2)}
 .section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:13px}
-.section-head h2{margin:0;font-size:15px;font-weight:850;letter-spacing:-.015em}
+.section-head h2{margin:0;font-size:18px;font-weight:850;letter-spacing:-.015em}
 .section-head p{margin:3px 0 0;color:var(--muted);font-size:10.8px}
 
 /* ---------- Overview cards ---------- */
@@ -418,7 +422,7 @@ tbody tr:last-child td{border-bottom:none}
 td.num-col{text-align:right;font-variant-numeric:tabular-nums}
 .util-cell{display:flex;align-items:center;justify-content:flex-end;gap:7px}
 .util-track{width:66px;height:5px;border-radius:99px;background:var(--surface3);overflow:hidden}
-.util-fill{height:100%;border-radius:inherit;background:var(--cat)}
+.util-fill{display:block;height:100%;border-radius:inherit;background:var(--cat)}
 .badge{
   display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;font-size:9.5px;font-weight:900
 }
@@ -456,7 +460,7 @@ td.num-col{text-align:right;font-variant-numeric:tabular-nums}
 .manager-component{display:flex;align-items:center;gap:13px;font-weight:900;font-size:12px}.manager-component small{display:block;color:var(--muted);font-size:9px;font-weight:600}.manager-swatch{width:4px;height:34px;border-radius:5px;background:var(--manager-color)}
 .component-photo{width:68px;height:54px;object-fit:contain;flex:none;border-radius:0;background:transparent;border:0;padding:0;filter:drop-shadow(0 5px 7px rgba(16,54,84,.18));transition:transform .25s ease,filter .25s ease}.manager-component:hover .component-photo,.role-card:hover .role-photo{transform:translateY(-2px) scale(1.04);filter:drop-shadow(0 8px 8px rgba(16,54,84,.22))}
 .manager-status{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:99px;color:#fff;background:#159653;font-size:10px;font-weight:900}.manager-status.warn{background:#c3820b}.manager-status:before{content:"✓";display:grid;place-items:center;width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.2)}
-.manager-util{display:flex;align-items:center;gap:9px;min-width:155px}.manager-util strong{color:var(--manager-color);font-size:12px}.manager-util-track{height:8px;flex:1;border-radius:99px;background:var(--surface3);overflow:hidden}.manager-util-fill{height:100%;border-radius:inherit;background:var(--manager-color);transition:width .85s cubic-bezier(.2,.8,.2,1)}
+.manager-util{display:flex;align-items:center;gap:9px;min-width:155px}.manager-util strong{color:var(--manager-color);font-size:12px}.manager-util-track{height:8px;flex:1;border-radius:99px;background:var(--surface3);overflow:hidden}.manager-util-fill{display:block;height:100%;border-radius:inherit;background:var(--manager-color);transition:width .85s cubic-bezier(.2,.8,.2,1)}
 .manager-roles{display:grid;grid-template-columns:repeat(3,1fr) minmax(210px,.8fr);gap:10px;margin-top:10px}.role-card,.manager-note{border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:12px;box-shadow:var(--shadow2)}.role-card{position:relative;overflow:hidden}.role-card:after{content:"";position:absolute;right:-28px;bottom:-32px;width:85px;height:85px;border-radius:50%;background:color-mix(in srgb,var(--manager-color) 12%,transparent)}.role-head{position:relative;z-index:1;display:flex;align-items:center;gap:10px}.role-photo{width:86px;height:64px;object-fit:contain;flex:none;border-radius:0;background:transparent;border:0;padding:0;filter:drop-shadow(0 5px 7px rgba(16,54,84,.18));transition:transform .25s ease,filter .25s ease}.role-card h3{margin:0;color:var(--manager-color);font-size:14px}.role-card p{margin:2px 0 8px;color:var(--muted);font-size:9.5px}.role-card ul{margin:0;padding-left:15px;color:var(--text2);font-size:10px;line-height:1.55}.role-card li::marker{color:var(--manager-color)}.role-health{position:relative;z-index:1;margin-top:10px;padding:8px;border-radius:8px;background:color-mix(in srgb,var(--ok) 8%,var(--surface2));color:var(--ok);font-size:10px;font-weight:900}.manager-note{background:linear-gradient(145deg,#fff9dc,#fff1b8);border-color:#efd27a;color:#174365}.manager-note h3{margin:0 0 7px;color:#ec5a1b;font-family:var(--display);font-size:17px}.manager-note p{margin:0;font-size:10.5px;line-height:1.55}.manager-note strong{color:#ee5c1d}.manager-note .note-rule{height:2px;width:70%;margin:7px 0;background:#ee7728;border-radius:99px}
 @media(max-width:1160px){.manager-roles{grid-template-columns:repeat(3,1fr)}.manager-note{grid-column:1/-1}}
 @media(max-width:700px){.manager-snapshot{padding-top:14px}.manager-titlebar h2{font-size:15px}.manager-roles{grid-template-columns:1fr}.manager-note{grid-column:auto}}
@@ -549,8 +553,8 @@ td.num-col{text-align:right;font-variant-numeric:tabular-nums}
 .logo:hover{transform:translateY(-1px)}
 
 /* Reference-inspired print-style hierarchy for processed inventory. */
-html[data-theme="light"] .section-head h2{font-size:18px;color:#123d68}
-html[data-theme="light"] .section-head h2:before{content:"";display:inline-block;width:22px;height:4px;margin:0 8px 4px 0;border-radius:99px;background:var(--blue)}
+html[data-theme="light"] .section-head h2{color:#123d68}
+html[data-theme="light"] .section-head h2:before,html[data-theme="dark"] .section-head h2:before{content:"";display:inline-block;width:22px;height:4px;margin:0 8px 4px 0;border-radius:99px;background:var(--blue)}
 html[data-theme="light"] .ov-card{border-radius:11px;background:linear-gradient(135deg,#f9fcfd,#eaf3f8)}
 html[data-theme="light"] .cat-kpi-value{color:#123d68}
 html[data-theme="light"] .filter-panel,html[data-theme="light"] .chart-card,html[data-theme="light"] .panel,html[data-theme="light"] .table-shell{box-shadow:0 10px 28px rgba(26,82,119,.08)}
@@ -559,6 +563,17 @@ html[data-theme="light"] .hero-main,html[data-theme="light"] .upload-card{backgr
 html[data-theme="light"] .manager-table-shell,html[data-theme="light"] .role-card{background:#f5f9fb}
 html[data-theme="light"] .manager-table th{background:#e7f0f5}
 html[data-theme="light"] .topbar{background:color-mix(in srgb,#e8eff5 92%,transparent)}
+html[data-theme="light"] .section-head p,html[data-theme="light"] .ov-sub,html[data-theme="light"] .cat-subtitle,html[data-theme="light"] .cat-kpi-sub,html[data-theme="light"] .q-sub,html[data-theme="light"] .role-card p,html[data-theme="light"] .manager-component small{color:#506b84}
+html[data-theme="light"] .field label,html[data-theme="light"] .manager-table th,html[data-theme="light"] thead th{color:#4c6780;font-weight:900}
+html[data-theme="light"] .ov-metric span,html[data-theme="light"] .cat-kpi-label,html[data-theme="light"] .q-label{color:#526d84}
+html[data-theme="light"] .role-card ul,html[data-theme="light"] .manager-note p{color:#294d6c}
+html[data-theme="light"] .manager-table td,html[data-theme="light"] tbody td{color:#173b5c}
+html[data-theme="light"] .table-count,html[data-theme="light"] .page-left,html[data-theme="light"] .pager span{color:#506b84}
+html[data-theme="light"] .ov-metric b,html[data-theme="light"] .cat-kpi-value,html[data-theme="light"] .q-value{color:#123b62}
+html[data-theme="light"] .field input,html[data-theme="light"] .field select,html[data-theme="light"] .page-left select{color:#193d5c}
+.section-head p,.ov-sub,.cat-subtitle,.cat-kpi-sub,.role-card p{font-size:11px}
+.manager-table td,tbody td{font-size:12px}
+.manager-table th,thead th{font-size:10px}
 
 </style>
 </head>
@@ -1336,13 +1351,13 @@ function renderManagerSnapshot(){
     const buffer=Math.max(1,Math.round(summary.received*.1));
     const needsRestock=summary.remaining<=buffer || rows.some(row=>row.dataIssue);
     return `<tr>
-      <td><div class="manager-component" style="--manager-color:${definition.color}"><img class="component-photo" src="${definition.photo}" data-fallback="${PHOTO_FALLBACKS[item]}" alt="${definition.name}" onerror="this.onerror=null;this.src=this.dataset.fallback"><span class="manager-swatch"></span><div>${item}<small>${definition.name}</small></div></div></td>
+      <td><div class="manager-component" style="--manager-color:${definition.color}"><img class="component-photo" src="${PHOTO_FALLBACKS[item]}" data-local-src="${definition.photo}" alt="${definition.name}" loading="eager" decoding="async" fetchpriority="high"><span class="manager-swatch"></span><div>${item}<small>${definition.name}</small></div></div></td>
       <td class="num">${fmtInt(summary.received)}</td><td class="num">${fmtInt(summary.utilized)}</td><td class="num">${fmtInt(summary.remaining)}</td><td class="num">${fmtInt(buffer)}</td>
       <td><span class="manager-status ${needsRestock?"warn":""}">${needsRestock?"Restock alert":"Healthy"}</span></td>
       <td><div class="manager-util" style="--manager-color:${definition.color}"><strong>${fmtPct(summary.utilizationPercentage)}</strong><span class="manager-util-track"><span class="manager-util-fill" style="width:${clampPct(summary.utilizationPercentage)}%"></span></span></div></td>
     </tr>`;
   }).join("");
-  const roleCards=summaries.map(({item,summary,definition})=>`<article class="role-card" style="--manager-color:${definition.color}"><div class="role-head"><img class="role-photo" src="${definition.photo}" data-fallback="${PHOTO_FALLBACKS[item]}" alt="${definition.name}" onerror="this.onerror=null;this.src=this.dataset.fallback"><div><h3>${item}</h3><p>${definition.name}</p></div></div><ul>${definition.bullets.map(text=>`<li>${escapeHtml(text)}</li>`).join("")}</ul><div class="role-health">Inventory health · ${fmtInt(summary.remaining)} available</div></article>`).join("");
+  const roleCards=summaries.map(({item,summary,definition})=>`<article class="role-card" style="--manager-color:${definition.color}"><div class="role-head"><img class="role-photo" src="${PHOTO_FALLBACKS[item]}" data-local-src="${definition.photo}" alt="${definition.name}" loading="eager" decoding="async" fetchpriority="high"><div><h3>${item}</h3><p>${definition.name}</p></div></div><ul>${definition.bullets.map(text=>`<li>${escapeHtml(text)}</li>`).join("")}</ul><div class="role-health">Inventory health · ${fmtInt(summary.remaining)} available</div></article>`).join("");
   const lowest=summaries.slice().sort((a,b)=>a.summary.remainingPercentage-b.summary.remainingPercentage)[0];
   $("#managerSnapshot").innerHTML=`
     <div class="manager-titlebar">${icon("box")}<h2>Hardware Inventory Details</h2></div>
@@ -1370,7 +1385,7 @@ function renderOverview(){
     return `
       <button class="ov-card ${cls}" data-overview-jump="${item}">
         <div class="ov-head">
-          <div class="ov-title"><img class="overview-photo" src="${photo}" data-fallback="${PHOTO_FALLBACKS[item]}" alt="${sub}" onerror="this.onerror=null;this.src=this.dataset.fallback">${item}</div>
+          <div class="ov-title"><img class="overview-photo" src="${PHOTO_FALLBACKS[item]}" data-local-src="${photo}" alt="${sub}" loading="eager" decoding="async" fetchpriority="high">${item}</div>
           <div class="ov-util">${fmtPct(s.utilizationPercentage)}</div>
         </div>
         <div class="ov-sub">${sub}</div>
