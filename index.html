@@ -1515,6 +1515,7 @@ function enterDashboard(){
   $("#pdfBtn").disabled=false;
   renderAll();
   state.filebarTimer=setTimeout(()=>filebar.classList.add("is-settled"),2800);
+  setTimeout(()=>startOnboarding("dashboard"),650);
 }
 
 function showEmptyState(){
@@ -1552,14 +1553,22 @@ function confirmRefresh(){
   window.location.reload();
 }
 
-const onboardingSteps=[
+const uploadOnboardingSteps=[
   {selector:"#dropzone",title:"1. Upload your workbook",text:"Click Browse Excel File or drag your .XLSX/.XLS workbook into this area. The data is read locally in this browser tab."},
-  {selector:".hero-main",title:"2. Start with Operations Summary",text:"After upload, Operations Summary opens automatically. Review the DCU, NIC, and Meter Seal cards, charts, bars, and donut views."},
+  {selector:".hero-main",title:"2. Start with Operations Summary",text:"After upload, Operations Summary opens automatically with DCU, NIC, and Meter Seal inventory cards and charts."},
   {selector:"#themeBtn",title:"3. Change the viewing mode",text:"The dashboard starts in Light theme. Use this button any time to switch between Light and Dark theme."},
-  {selector:".privacy",title:"4. Explore safely",text:"Use Detailed View for filters, installation charts, and stock tables. Your workbook is processed locally and is never uploaded to a server."}
+  {selector:".privacy",title:"4. Explore safely",text:"Your workbook is processed locally in this browser tab and is never uploaded to a server."}
 ];
+const dashboardOnboardingSteps=[
+  {selector:".dashboard-pages",title:"1. Choose a dashboard view",text:"Operations Summary is the default view. Choose Detailed View when you need filters, installation charts, and stock tables."},
+  {selector:"#referenceAvailabilityBars",title:"2. Read stock availability",text:"Review the available percentage for DCU, NIC, and Meter Seal. Use Bars or Donut to change the visualization manually."},
+  {selector:"#referenceDeploymentBars",title:"3. Review deployment rate",text:"Compare deployed percentages by material. This panel also supports Bars and Donut views and changes automatically every 12 seconds."},
+  {selector:"#changeFileBtn",title:"4. Load another workbook",text:"Use Change File to replace the current workbook. The dashboard recalculates all cards, charts, tables, and percentages automatically."}
+];
+let onboardingSteps=uploadOnboardingSteps;
 let onboardingIndex=0;
 let onboardingTarget=null;
+let onboardingMode="upload";
 
 function positionOnboarding(){
   const card=$("#onboardingCard");
@@ -1595,13 +1604,15 @@ function closeOnboarding(){
   if(onboardingTarget) onboardingTarget.classList.remove("onboarding-target");
   onboardingTarget=null;
   $("#onboarding").classList.remove("show");
-  try { localStorage.setItem("yitran-onboarding-seen","1"); } catch(e) { /* private browsing may block storage */ }
+  try { localStorage.setItem(`yitran-${onboardingMode}-onboarding-seen`,"1"); } catch(e) { /* private browsing/file mode may block storage */ }
 }
 
-function startOnboarding(){
+function startOnboarding(mode="upload"){
   let seen=false;
-  try { seen=localStorage.getItem("yitran-onboarding-seen")==="1"; } catch(e) {}
-  if(seen || state.rows.length) return;
+  onboardingMode=mode;
+  onboardingSteps=mode==="dashboard"?dashboardOnboardingSteps:uploadOnboardingSteps;
+  try { seen=localStorage.getItem(`yitran-${mode}-onboarding-seen`)==="1"; } catch(e) {}
+  if(seen || (mode==="upload" && state.rows.length) || (mode==="dashboard" && !state.rows.length)) return;
   onboardingIndex=0;
   $("#onboarding").classList.add("show");
   renderOnboardingStep();
