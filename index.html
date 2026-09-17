@@ -654,7 +654,7 @@ html[data-theme="light"] .filebar{border-bottom-color:var(--border)}
 .reference-panel h3{display:flex;align-items:center;gap:8px;margin:0;color:var(--text);font:800 14px var(--display),sans-serif}
 .reference-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}.reference-view-controls{display:flex;gap:4px}.reference-view-btn{border:1px solid var(--border);border-radius:6px;padding:5px 7px;background:#fff;color:var(--muted);font-size:9px;font-weight:900;cursor:pointer}.reference-view-btn.active{border-color:var(--blue);background:#eaf3ff;color:var(--blue)}.reference-view-btn:hover{border-color:var(--blue);color:var(--blue)}
 .reference-icon{display:grid;place-items:center;width:27px;height:27px;border-radius:8px;background:var(--blue);color:#fff;font-style:normal;font-size:13px}
-.reference-chart{height:220px;display:flex;align-items:flex-end;gap:clamp(24px,5vw,72px);padding:12px 12px 0 38px;margin-top:10px;border-bottom:1px solid #b9ccdc;background:repeating-linear-gradient(to bottom,transparent 0 35px,#e8f0f6 36px 37px)}
+.reference-chart{height:220px;display:flex;align-items:flex-end;gap:clamp(24px,5vw,72px);padding:12px 12px 25px 38px;margin-top:10px;border-bottom:1px solid #b9ccdc;background:repeating-linear-gradient(to bottom,transparent 0 35px,#e8f0f6 36px 37px)}
 .reference-bar-group{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:end;gap:clamp(6px,1vw,12px);flex:1;min-width:0;height:100%;max-width:none}
 .reference-bar{position:relative;min-height:3px;border-radius:5px 5px 0 0;background:var(--bar-color);transition:height .55s cubic-bezier(.2,.8,.2,1)}
 .reference-bar{width:clamp(28px,5vw,58px);justify-self:center}
@@ -676,10 +676,10 @@ html[data-theme="light"] .filebar{border-bottom-color:var(--border)}
 @keyframes referencePieIn{from{opacity:0;transform:scale(.75) rotate(-25deg)}to{opacity:1;transform:scale(1) rotate(0)}}
 .reference-deployment-stage{position:relative;height:220px;margin-top:20px;overflow:hidden}
 .reference-lower{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,.95fr);gap:16px;margin-top:16px}
-.reference-table-wrap{overflow:auto;margin-top:14px}.reference-table{width:100%;min-width:580px;border-collapse:collapse}.reference-table th{padding:0 9px 9px;color:#71869c;border-bottom:1px solid var(--border);font-size:9px;font-weight:900;text-align:left;text-transform:uppercase}.reference-table td{padding:11px 9px;color:#385470;border-bottom:1px solid #edf3f7;font-size:11px;font-weight:600}.reference-table td:first-child{color:#71869c}.reference-chip{display:inline-block;padding:4px 7px;border-radius:5px;background:#daf7ef;color:#087b68;font-size:9px;font-weight:900}
-.reference-stock{display:grid;gap:14px;margin-top:16px}.reference-stock-row{display:grid;grid-template-columns:42px 1fr auto;gap:9px;align-items:center}.reference-stock-row b{font-size:11px}.reference-stock-row small{display:block;margin-top:2px;color:var(--muted);font-size:9px}.reference-stock-row strong{font:800 11px var(--display),sans-serif}
+.reference-table-wrap{overflow-x:auto;overflow-y:visible;margin-top:14px}.reference-table{width:100%;min-width:580px;border-collapse:collapse}.reference-table thead{display:table-header-group}.reference-table th{position:relative;top:auto;z-index:auto;padding:9px;color:#71869c;background:var(--surface2);border-bottom:1px solid var(--border);font-size:10px;font-weight:900;text-align:left;text-transform:uppercase}.reference-table td{padding:11px 9px;color:#385470;border-bottom:1px solid #edf3f7;font-size:12px;font-weight:600}.reference-table td:first-child{color:#71869c}.reference-chip{display:inline-block;padding:4px 7px;border-radius:5px;background:#daf7ef;color:#087b68;font-size:9px;font-weight:900}
+.reference-stock{display:grid;gap:25px;margin-top:20px;align-content:start}.reference-stock-row{display:grid;grid-template-columns:58px 1fr auto;gap:13px;align-items:center}.reference-stock-row b{font-size:14px;font-weight:900}.reference-stock-row small{display:block;margin-top:4px;color:var(--muted);font-size:11px}.reference-stock-row strong{font:800 15px var(--display),sans-serif}.reference-stock-row .reference-track{height:10px}
 @media(max-width:1050px){.reference-cards{grid-template-columns:1fr}.reference-grid{grid-template-columns:1fr 1fr}.reference-grid .reference-panel:first-child{grid-column:1/-1}.reference-lower{grid-template-columns:1fr}}
-@media(max-width:640px){.dashboard-pages{padding-top:7px}.reference-grid{grid-template-columns:1fr}.reference-grid .reference-panel:first-child{grid-column:auto}.reference-panel{padding:15px}.reference-chart{padding-left:8px;padding-right:8px;gap:15px}.reference-bar-group{gap:4px}.reference-bar{width:clamp(18px,7vw,32px)}.reference-legend{margin-left:0;gap:8px;font-size:8px}.reference-bar-group label{font-size:9px}}
+@media(max-width:640px){.dashboard-pages{padding-top:7px}.reference-grid{grid-template-columns:1fr}.reference-grid .reference-panel:first-child{grid-column:auto}.reference-panel{padding:15px}.reference-chart{padding:12px 8px 25px;gap:15px}.reference-bar-group{gap:4px}.reference-bar{width:clamp(18px,7vw,32px)}.reference-legend{margin-left:0;gap:8px;font-size:8px}.reference-bar-group label{font-size:9px}}
 
 html[data-theme="dark"] .reference-asset-card,html[data-theme="dark"] .reference-panel{background:var(--surface);border-color:var(--border);box-shadow:var(--shadow2)}
 html[data-theme="dark"] .reference-asset-card:after{opacity:.6}
@@ -769,6 +769,12 @@ html[data-theme="dark"] .chart-card,html[data-theme="dark"] .filter-panel,html[d
   .reference-panel{padding:14px}
   .reference-panel-heading{align-items:flex-start}
   .reference-availability-stage,.reference-deployment-stage{height:220px}
+  .reference-stock{gap:18px;margin-top:16px}
+  .reference-stock-row{grid-template-columns:48px 1fr auto;gap:9px}
+  .reference-stock-row b{font-size:12px}
+  .reference-stock-row small{font-size:10px}
+  .reference-stock-row strong{font-size:13px}
+  .reference-stock-row .reference-track{height:8px}
   .reference-chart{height:205px;padding-left:8px;padding-right:8px}
   .reference-bar-group{gap:3px}
   .reference-bar{width:clamp(18px,7vw,30px)}
@@ -1008,7 +1014,7 @@ html[data-theme="dark"] .chart-card,html[data-theme="dark"] .filter-panel,html[d
     <h2 id="onboardingTitle">Start with your workbook</h2>
     <p id="onboardingText">Drop the latest Excel file here or use Browse Excel File. Everything is processed in this browser.</p>
     <div class="onboarding-footer">
-      <div class="onboarding-dots" aria-hidden="true"><span class="onboarding-dot active"></span><span class="onboarding-dot"></span><span class="onboarding-dot"></span></div>
+      <div class="onboarding-dots" aria-hidden="true"><span class="onboarding-dot active"></span><span class="onboarding-dot"></span><span class="onboarding-dot"></span><span class="onboarding-dot"></span></div>
       <div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" id="onboardingSkip" type="button">Skip</button><button class="btn btn-primary btn-sm" id="onboardingNext" type="button">Next</button></div>
     </div>
   </div>
@@ -1061,7 +1067,7 @@ const state = {
   page: { NIC:1, DCU:1, SEAL:1 },
   pageSize: { NIC:10, DCU:10, SEAL:10 },
   charts: {},
-  theme: (() => { try { return localStorage.getItem("yitran-theme") === "dark" ? "dark" : "light"; } catch(e) { return "light"; } })(),
+  theme: (() => { try { return localStorage.getItem("yitran-theme-choice") === "dark" ? "dark" : "light"; } catch(e) { return "light"; } })(),
   themeTransitioning: false,
   toastTimer: null,
   toastHideTimer: null,
@@ -1348,7 +1354,7 @@ function setTheme(options={}){
 }
 $("#themeBtn").addEventListener("click",()=>{
   state.theme=state.theme==="dark"?"light":"dark";
-  try { localStorage.setItem("yitran-theme",state.theme); } catch(e) { /* private browsing/file mode may block storage */ }
+  try { localStorage.setItem("yitran-theme-choice",state.theme); } catch(e) { /* private browsing/file mode may block storage */ }
   const button=$("#themeBtn");
   const bounds=button.getBoundingClientRect();
   setTheme({animate:true,x:bounds.left+bounds.width/2,y:bounds.top+bounds.height/2});
@@ -1547,9 +1553,10 @@ function confirmRefresh(){
 }
 
 const onboardingSteps=[
-  {selector:"#dropzone",title:"Start with your workbook",text:"Drop the latest Excel file here or use Browse Excel File. Everything is processed in this browser."},
-  {selector:"#themeBtn",title:"Set your viewing mode",text:"Switch between light and dark themes for office work, presentations, or low-light review."},
-  {selector:".privacy",title:"Your data stays local",text:"The workbook is analyzed in this tab. After loading, use the material cards and filters to review installation progress."}
+  {selector:"#dropzone",title:"1. Upload your workbook",text:"Click Browse Excel File or drag your .XLSX/.XLS workbook into this area. The data is read locally in this browser tab."},
+  {selector:".hero-main",title:"2. Start with Operations Summary",text:"After upload, Operations Summary opens automatically. Review the DCU, NIC, and Meter Seal cards, charts, bars, and donut views."},
+  {selector:"#themeBtn",title:"3. Change the viewing mode",text:"The dashboard starts in Light theme. Use this button any time to switch between Light and Dark theme."},
+  {selector:".privacy",title:"4. Explore safely",text:"Use Detailed View for filters, installation charts, and stock tables. Your workbook is processed locally and is never uploaded to a server."}
 ];
 let onboardingIndex=0;
 let onboardingTarget=null;
@@ -2010,6 +2017,27 @@ function renderBarChart(item,key,rows,datasetLabels,datasetData,type){
   const p=chartColors();
   const palette=item==="NIC"?"#05a58b":item==="DCU"?"#126dde":"#6c47d7";
   const reducedMotion=state.themeTransitioning || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const valueLabelsPlugin={
+    id:"valueLabels",
+    afterDatasetsDraw(chart){
+      if(key!=="position") return;
+      const context=chart.ctx;
+      context.save();
+      context.fillStyle=p.text;
+      context.font="700 10px \"DM Sans\", sans-serif";
+      context.textAlign="center";
+      context.textBaseline="bottom";
+      chart.data.datasets.forEach((dataset,datasetIndex)=>{
+        const meta=chart.getDatasetMeta(datasetIndex);
+        meta.data.forEach((bar,index)=>{
+          const value=Number(dataset.data[index]);
+          if(!Number.isFinite(value)) return;
+          context.fillText(fmtInt(value),bar.x,Math.max(12,bar.y-6));
+        });
+      });
+      context.restore();
+    }
+  };
 
   const datasets=datasetLabels.map((label,i)=>{
     let color=palette;
@@ -2027,12 +2055,15 @@ function renderBarChart(item,key,rows,datasetLabels,datasetData,type){
   state.charts[`${key}-${item}`]=new Chart(canvas,{
     type:"bar",
     data:{labels:rows.map(r=>r.stock),datasets},
+    plugins:key==="position"?[valueLabelsPlugin]:[],
     options:{
       responsive:true,maintainAspectRatio:false,indexAxis:horizontal?"y":"x",
+      layout:{padding:{top:key==="position"?24:0}},
       animation:{duration:reducedMotion?0:850,easing:"easeOutQuart"},
       plugins:{
         legend:{
           display:datasetLabels.length>1,
+          position:key==="position"?"bottom":"top",
           labels:{color:p.text,usePointStyle:true,boxWidth:8,boxHeight:8,font:{size:10}}
         },
         tooltip:{
@@ -2050,6 +2081,7 @@ function renderBarChart(item,key,rows,datasetLabels,datasetData,type){
         x:{
           beginAtZero:true,
           max:type==="single-percent"?Math.max(100,...rows.map(r=>r.utilizationPercentage)):undefined,
+          title:{display:true,text:key==="position"?"Inventory lot":type==="single-percent"?"Installation progress (%)":"Available quantity",color:p.text,font:{size:10,weight:"700"}},
           ticks:{
             color:p.muted,font:{size:9},
             callback:value=>type==="single-percent"?`${value}%`:fmtInt(Number(value))
@@ -2058,6 +2090,7 @@ function renderBarChart(item,key,rows,datasetLabels,datasetData,type){
         },
         y:{
           beginAtZero:true,
+          title:{display:true,text:key==="position"?"Quantity":"Inventory lot",color:p.text,font:{size:10,weight:"700"}},
           ticks:{color:p.muted,font:{size:9}},
           grid:{display:horizontal?false:true,color:p.grid}
         }
